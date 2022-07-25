@@ -3,36 +3,34 @@ from collections import defaultdict
 import cv2
 import numpy as np
 
-def linesToMap(lines):
-    map={}
-    for line in lines:
-        radian=round(line[0][1],4)
-        radius=line[0][0]
-        if (radian in map.keys()):
-            map.get(radian).append(radius)
-            #map[radian]=map.get(radian).append(radius)
-        else:
-            map[radian]=[radius]
-    return linesMaptoFinalLines(map)
-def average(l):
-    return sum(l) / len(l)
-def linesMaptoFinalLines(map):
-    finalLines=[]
-    for radian in map:
-        valuesForRad=[]#this will be a 2d array
-        for radius in map[radian]:#iterates over all the values of this radius(an array of floats)
-            foundValueArrayForRadius=False
-            for lineOfKey in valuesForRad:#previous values found. line of key is also an array
-                if(abs(radius- average( lineOfKey))<6):
-                    lineOfKey.append(radius)
-                    foundValueArrayForRadius=True
-                    break
-            if(not foundValueArrayForRadius):
-                valuesForRad.append([radius])
 
-        for val in valuesForRad:
-            finalLines.append([[average(val),radian]])
-    return finalLines
+def lines_to_map(lines):
+    cleaned = [[line[0][0], round(line[0][1], 4)] for line in lines]
+    thetas = [theta for r, theta in cleaned]
+    map = {}
+    for theta in set(thetas):
+        map[theta] = [r for r, theta2 in cleaned if theta2 == theta]
+    return lines_map_to_final_lines(map)
+
+
+def lines_map_to_final_lines(map, max_distance=6):
+    final_lines = []
+    for radian in map:
+        values_for_rad = []  # this will be a 2d array
+        for radius in map[radian]:  # iterates over all the values of this radius(an array of floats)
+            found_value_array_for_radius = False
+            for lineOfKey in values_for_rad:  # previous values found. line of key is also an array
+                if abs(radius - np.average(lineOfKey)) < max_distance:
+                    lineOfKey.append(radius)
+                    found_value_array_for_radius = True
+                    break
+            if not found_value_array_for_radius:
+                values_for_rad.append([radius])
+
+        for val in values_for_rad:
+            final_lines.append([[np.average(val), radian]])
+    return final_lines
+
 
 # def uniqueLines(lines):
 #     seenLines=[]
@@ -63,7 +61,7 @@ def segment_by_angle_kmeans(lines, k=2, **kwargs):
     # returns angles in [0, pi] in radians
     angles = np.array([line[0][1] for line in lines])
     # multiply the angles by two and find coordinates of that angle
-    pts = np.array([[np.cos(2*angle), np.sin(2*angle)]
+    pts = np.array([[np.cos(2 * angle), np.sin(2 * angle)]
                     for angle in angles], dtype=np.float32)
 
     # run kmeans on the coords
@@ -76,6 +74,7 @@ def segment_by_angle_kmeans(lines, k=2, **kwargs):
         segmented[labels[i]].append(line)
     segmented = list(segmented.values())
     return segmented
+
 
 def intersection(line1, line2):
     """Finds the intersection of two lines given in Hesse normal form.
@@ -100,7 +99,7 @@ def segmented_intersections(lines):
 
     intersections = []
     for i, group in enumerate(lines[:-1]):
-        for next_group in lines[i+1:]:
+        for next_group in lines[i + 1:]:
             for line1 in group:
                 for line2 in next_group:
                     intersections.append(intersection(line1, line2))
