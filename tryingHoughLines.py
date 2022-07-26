@@ -15,6 +15,9 @@ from matplotlib import pyplot as plt
 img = cv2.imread('images/download.png')
 #img = cv2.imread('images/commercial-billboard-mockup-display-outdoor_174431-225.webp')
 #img = cv2.imread('images/imageParal.jpg')
+#img = cv2.imread('images/properties-of-parallelograms.jpg')
+
+
 height, width = img.shape[:2]
 # Convert the img to grayscale
 # img=cv2.GaussianBlur(img, (2, 2), 0)
