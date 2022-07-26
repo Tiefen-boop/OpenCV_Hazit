@@ -13,8 +13,11 @@ from collections import defaultdict
 from matplotlib import pyplot as plt
 
 img = cv2.imread('images/download.png')
-
+#img = cv2.imread('images/commercial-billboard-mockup-display-outdoor_174431-225.webp')
+#img = cv2.imread('images/imageParal.jpg')
+height, width = img.shape[:2]
 # Convert the img to grayscale
+# img=cv2.GaussianBlur(img, (2, 2), 0)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 titles = ['Original Image', 'grey']
@@ -26,7 +29,35 @@ for i in range(2):
 plt.show()
 
 # Apply edge detection method on the image
-edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+#edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+#laplacian
+ddepth = cv2.CV_8UC1
+kernel_size = 3
+window_name = "Laplace Demo"
+edges=cv2.Laplacian(gray, ddepth, ksize=kernel_size)#a matrix
+
+
+print(edges)
+
+#filtering
+for y in range (len(edges)):
+    for x in range (len(edges[y])):
+        if(edges[y][x]<220):
+            edges[y][x] = 0
+
+
+
+
+# [convert]
+# converting back to uint8
+abs_dst = cv2.convertScaleAbs(edges)
+# [convert]
+# [display]
+cv2.imwrite('laplac.jpg', abs_dst)
+# cv2.imshow(window_name, abs_dst)
+# cv2.waitKey(0)
+#print(edges)
 
 titles = ['Original Image', 'grey']
 images = [img, edges]
@@ -37,7 +68,10 @@ for i in range(2):
 plt.show()
 # This returns an array of r and theta values
 
-lines = cv2.HoughLines(edges, 1, np.pi / 180, 80)
+#lines = cv2.HoughLines(edges, 1, np.pi / 180, int( min(height,width)*0.588))
+lines = cv2.HoughLines(edges, 1, np.pi / 180, 100)
+
+
 
 # The below for loop runs till r and theta values
 # are in the range of the 2d array
@@ -83,7 +117,10 @@ for r_theta in lines:
 segmented = helpFunctions.segment_by_angle_kmeans(lines)
 intersections = helpFunctions.segmented_intersections(segmented)
 
-for inter in intersections:
-    cv2.circle(img, (inter[0][0], inter[0][1]), radius=3, color=(0, 255, 0), thickness=-1)
+# for inter in intersections:
+#     cv2.circle(img, (inter[0][0], inter[0][1]), radius=3, color=(0, 255, 0), thickness=-1)
+#     # cv2.putText(img, str(inter[0][0])+" "+str( inter[0][1]), (inter[0][0], inter[0][1]),
+#     #             cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0))
+# print(intersections)
 
 cv2.imwrite('linesDetected.jpg', img)

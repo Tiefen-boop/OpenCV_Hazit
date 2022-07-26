@@ -5,7 +5,7 @@ import numpy as np
 
 
 def lines_to_map(lines):
-    cleaned = [[line[0][0], round(line[0][1], 4)] for line in lines]
+    cleaned = [[line[0][0], round(line[0][1], 3)] for line in lines]
     thetas = [theta for r, theta in cleaned]
     map = {}
     for theta in set(thetas):
@@ -105,3 +105,14 @@ def segmented_intersections(lines):
                     intersections.append(intersection(line1, line2))
 
     return intersections
+
+def findVer(vertices):
+    cleaned = [ver[0] for ver in vertices]
+    fourVer=[[0,0],[0,0],[0,0],[0,0]]
+    leftDown=[0,0]
+    leftUp=[0,0]
+    rightDown=[0,0]
+    rightUp = [0, 0]
+    for x,y in cleaned:
+        True
+
