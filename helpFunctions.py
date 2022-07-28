@@ -116,3 +116,5 @@ def findVer(vertices):
     for x,y in cleaned:
         True
 
+def findLinesByMaxGrad(imgMatrix):
+    return np.amax(imgMatrix)

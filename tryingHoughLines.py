@@ -39,17 +39,19 @@ kernel_size = 3
 window_name = "Laplace Demo"
 edges=cv2.Laplacian(gray, ddepth, ksize=kernel_size)#a matrix
 
-
+np.set_printoptions(threshold=np.inf)
 print(edges)
-
+print(len(edges))
+maxValue=helpFunctions.findLinesByMaxGrad(edges)
 #filtering
 for y in range (len(edges)):
     for x in range (len(edges[y])):
-        if(edges[y][x]<220):
+        if(edges[y][x]<maxValue):
             edges[y][x] = 0
 
 
-
+np.set_printoptions(threshold=np.inf)
+print(edges)
 
 # [convert]
 # converting back to uint8
@@ -74,14 +76,14 @@ plt.show()
 lines = cv2.HoughLines(edges, 1, np.pi / 180, 180)
 
 
-
-# The below for loop runs till r and theta values
-# are in the range of the 2d array
 print(lines)
 lines = helpFunctions.lines_to_map(lines)
 print("print final lines \n ")
 print(lines)
 
+
+# The below for loop runs till r and theta values
+# are in the range of the 2d array
 for r_theta in lines:
     arr = np.array(r_theta[0], dtype=np.float64)
     r, theta = arr
