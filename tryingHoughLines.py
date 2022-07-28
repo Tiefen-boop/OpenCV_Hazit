@@ -1,5 +1,7 @@
 # Python program to illustrate HoughLine
 # method for line detection
+import os
+
 import cv2
 import numpy as np
 import helpFunctions
@@ -12,24 +14,21 @@ from collections import defaultdict
 
 from matplotlib import pyplot as plt
 
-img = cv2.imread('images/download.png')
-#img = cv2.imread('images/commercial-billboard-mockup-display-outdoor_174431-225.webp')
-#img = cv2.imread('images/imageParal.jpg')
-#img = cv2.imread('images/properties-of-parallelograms.jpg')
-
+imgAddress="images/imagesForTesting/988Cropped.jpg"
+img=cv2.imread(imgAddress)
 
 height, width = img.shape[:2]
 # Convert the img to grayscale
-# img=cv2.GaussianBlur(img, (2, 2), 0)
+#img=cv2.GaussianBlur(img, (1, 1), 0)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-titles = ['Original Image', 'grey']
-images = [img, gray]
-for i in range(2):
-    plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
-    plt.title(titles[i])
-    plt.xticks([]), plt.yticks([])
-plt.show()
+# titles = ['Original Image', 'grey']
+# images = [img, gray]
+# for i in range(2):
+#     plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
+#     plt.title(titles[i])
+#     plt.xticks([]), plt.yticks([])
+# plt.show()
 
 # Apply edge detection method on the image
 #edges = cv2.Canny(gray, 50, 150, apertureSize=3)
@@ -72,7 +71,7 @@ plt.show()
 # This returns an array of r and theta values
 
 #lines = cv2.HoughLines(edges, 1, np.pi / 180, int( min(height,width)*0.588))
-lines = cv2.HoughLines(edges, 1, np.pi / 180, 100)
+lines = cv2.HoughLines(edges, 1, np.pi / 180, 180)
 
 
 
@@ -117,8 +116,11 @@ for r_theta in lines:
 
 # All the changes made in the input image are finally
 # written on a new image houghlines.jpg
-segmented = helpFunctions.segment_by_angle_kmeans(lines)
-intersections = helpFunctions.segmented_intersections(segmented)
+
+
+#finding the vertices
+# segmented = helpFunctions.segment_by_angle_kmeans(lines)
+# intersections = helpFunctions.segmented_intersections(segmented)
 
 # for inter in intersections:
 #     cv2.circle(img, (inter[0][0], inter[0][1]), radius=3, color=(0, 255, 0), thickness=-1)
@@ -126,4 +128,9 @@ intersections = helpFunctions.segmented_intersections(segmented)
 #     #             cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0))
 # print(intersections)
 
-cv2.imwrite('linesDetected.jpg', img)
+
+
+
+cv2.imwrite("images/linesDetected/"+imgAddress.split("/")[-1], img)
+
+
