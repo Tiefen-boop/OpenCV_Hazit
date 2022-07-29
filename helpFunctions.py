@@ -159,7 +159,7 @@ def _diagonalLine(imgMatrix, x, y):
     return Line(startPoint, [endPointX, endPointY])
 
 
-def findLinesByMaxGrad(imgMatrix):
+def findLinesByMaxGrad(imgMatrix,minLineLength=2):#for start the variable for minLength is 2
     foundlines = []
     for y in range(len(imgMatrix)):
         for x in range(len(imgMatrix[y])):
@@ -181,15 +181,15 @@ def findLinesByMaxGrad(imgMatrix):
                     checkDown=False  # the point is already a part of a line found before
             if checkRight:
                 line = _lineToRight(imgMatrix, x, y)
-                if line.lineLength() > 0:
+                if line.lineLength() >= minLineLength:
                     foundlines.append(line)
             if checkDown:
                 line = _lineToDown(imgMatrix, x, y)
-                if line.lineLength() > 0:
+                if line.lineLength() >= minLineLength:
                     foundlines.append(line)
             if checkDiagonal:
                 line = _diagonalLine(imgMatrix, x, y)
-                if line.lineLength() > 0:
+                if line.lineLength() >= minLineLength:
                     foundlines.append(line)
 
     return foundlines
