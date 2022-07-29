@@ -3,6 +3,8 @@ from collections import defaultdict
 import cv2
 import numpy as np
 
+from Line import Line
+
 
 def lines_to_map(lines):
     cleaned = [[line[0][0], round(line[0][1], 3)] for line in lines]
@@ -106,15 +108,88 @@ def segmented_intersections(lines):
 
     return intersections
 
+
 def findVer(vertices):
     cleaned = [ver[0] for ver in vertices]
-    fourVer=[[0,0],[0,0],[0,0],[0,0]]
-    leftDown=[0,0]
-    leftUp=[0,0]
-    rightDown=[0,0]
+    fourVer = [[0, 0], [0, 0], [0, 0], [0, 0]]
+    leftDown = [0, 0]
+    leftUp = [0, 0]
+    rightDown = [0, 0]
     rightUp = [0, 0]
-    for x,y in cleaned:
+    for x, y in cleaned:
         True
 
-def findLinesByMaxGrad(imgMatrix):
+
+def findMaxGrad(imgMatrix):
     return np.amax(imgMatrix)
+
+
+def _lineToRight(imgMatrix, x, y):
+    startPoint = [x, y]
+    endPointX = x
+    while endPointX < len(imgMatrix[y])-1:
+        if imgMatrix[y][endPointX + 1] > 0:
+            endPointX += 1
+        else:
+            break
+    return Line(startPoint, [endPointX, y])
+
+
+def _lineToDown(imgMatrix, x, y):
+    startPoint = [x, y]
+    endPointY = y
+    while endPointY < len(imgMatrix)-1:
+        if imgMatrix[endPointY][x] > 0:
+            endPointY += 1
+        else:
+            break
+    return Line(startPoint, [x, endPointY])
+
+
+def _diagonalLine(imgMatrix, x, y):
+    startPoint = [x, y]
+    endPointY = y
+    endPointX = x
+    while endPointX < len(imgMatrix[y])-1 and endPointY < len(imgMatrix)-1:
+        if imgMatrix[endPointY + 1][endPointX + 1] > 0:
+            endPointX += 1
+            endPointY += 1
+        else:
+            break
+    return Line(startPoint, [endPointX, endPointY])
+
+
+def findLinesByMaxGrad(imgMatrix):
+    foundlines = []
+    for y in range(len(imgMatrix)):
+        for x in range(len(imgMatrix[y])):
+            checkRight=True
+            checkDown = True
+            checkDiagonal = True
+            # print(str(y)+" " +str(x))
+            if imgMatrix[y][x] == 0:
+                continue  # cell isnt at max grad so isnt a part of a line
+            point = [x, y]
+            if x > 0 and y > 0:
+                if imgMatrix[y-1][x - 1] > 0:
+                    checkDiagonal=False # the point is already a part of a line found before
+            if x > 0:
+                if imgMatrix[y][x - 1] > 0:
+                    checkRight=False  # the point is already a part of a line found before from its left side(using lineToRight)
+            if y > 0:
+                if imgMatrix[y-1][x] > 0:
+                    checkDown=False  # the point is already a part of a line found before
+            if checkRight:
+                line = _lineToRight(imgMatrix, x, y)
+                if line.lineLength() > 0:
+                    foundlines.append(line)
+            if checkDown:
+                line = _lineToDown(imgMatrix, x, y)
+                if line.lineLength() > 0:
+                    foundlines.append(line)
+            if checkDiagonal:
+                line = _diagonalLine(imgMatrix, x, y)
+                if line.lineLength() > 0:
+                    foundlines.append(line)
+
+    return foundlines
