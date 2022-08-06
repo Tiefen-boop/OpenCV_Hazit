@@ -34,10 +34,10 @@ gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 #edges = cv2.Canny(gray, 50, 150, apertureSize=3)
 
 #laplacian
-ddepth = cv2.CV_8UC1
+ddepth = cv2.cv_8uc1
 kernel_size = 3
-window_name = "Laplace Demo"
-edges=cv2.Laplacian(gray, ddepth, ksize=kernel_size)#a matrix
+window_name = "laplace demo"
+edges=cv2.laplacian(gray, ddepth, ksize=kernel_size)#a matrix
 
 
 print(edges)
@@ -61,7 +61,7 @@ cv2.imwrite('laplac.jpg', abs_dst)
 # cv2.waitKey(0)
 #print(edges)
 
-titles = ['Original Image', 'grey']
+titles = ['original image', 'grey']
 images = [img, edges]
 for i in range(2):
     plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
