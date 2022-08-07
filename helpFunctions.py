@@ -119,36 +119,70 @@ def findVer(vertices):
         True
 
 
+def filter_gradient(edges, threshold=220):
+    y_max = len(edges)
+    x_max = len(edges[0])
+    filtered = np.zeros((y_max, x_max))
+    for y in range(len(edges)):
+        for x in range(len(edges[y])):
+            if edges[y][x] >= threshold:
+                filtered[y][x] = edges[y][x]
+    return filtered
+
+
 def apply_mask(edges, mask):
-    x_max = len(edges)
-    y_max = len(edges[0])
-    masked = np.zeros((x_max, y_max))
+    y_max = len(edges)
+    x_max = len(edges[0])
+    masked = np.zeros((y_max, x_max))
     for x in range(x_max):
         for y in range(y_max):
-            if mask[x][y] != 0:
-                masked[x][y] = edges[x][y]
+            if mask[y][x] != 0:
+                masked[y][x] = edges[y][x]
     return masked
 
 
 def compute_hough_space(gradient):
-    x_max = len(gradient)
-    y_max = len(gradient[0])
+    y_max = len(gradient)
+    x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
-    theta_max = 359
+    theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    origin = (0, 0)
     for x1 in range(x_max):
         for y1 in range(y_max):
-            if gradient[x1][y1] != 0:
-                p1 = (x1, y1)
-                for x2 in range(x_max):
-                    for y2 in range(y_max):
-                        if gradient[x2][y2] != 0 and (x1 != x2 or y1 != y2):
-                            p2 = (x2, y2)
-                            r = int(np.linalg.norm(np.cross((x2-x1, y2-y1), p1)) / np.linalg.norm((x2-x1, y2-y1)))
+            if gradient[y1][x1] != 0:
+                for x2 in range(x1, x_max):
+                    for y2 in range(y1, y_max):
+                        if gradient[y2][x2] != 0 and (x1 != x2 or y1 != y2):
                             if x1 == x2:
                                 theta = 0
+                                r = x1
                             else:
-                                theta = 90 - int(np.arctan(((y2 - y1) / (x2 - x1))) * 180 / np.pi)
+                                coefs = np.polyfit([x1, x2], [y1, y2], 1)
+                                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+                                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+                                if coefs[1] < 0:
+                                    theta = - (90 - alpha)
+                                else:
+                                    theta = 90 + alpha
+                            theta = (theta + 180) % 360  # rotate theta
                             hough_space[r][theta] = hough_space[r][theta] + 1
+    hough_space = hough_space * 255 / hough_space.max()
+    return hough_space
+
+
+def compute_hough_space_2(gradient):
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for x in range(x_max):
+        for y in range(y_max):
+            if gradient[y][x] != 0:
+                for theta in range(-89, 179):
+                    theta_rad = theta * np.pi / 180
+                    r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad)))
+                    theta = (theta + 180) % 360  # rotate theta
+                    hough_space[r][theta] = hough_space[r][theta] + 1
+    hough_space = hough_space * 255 / hough_space.max()
     return hough_space

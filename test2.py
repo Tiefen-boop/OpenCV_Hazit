@@ -24,21 +24,23 @@ kernel_size = 3
 window_name = "laplace demo"
 laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
 
+# filter
+filtered = helpFunctions.filter_gradient(laplaced, 0)
+
 # mask
 maskAddress = "01562_mask.png"
 mask = cv2.imread(maskAddress)
 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 
-masked = helpFunctions.apply_mask(laplaced, mask)
+masked = helpFunctions.apply_mask(filtered, mask)
+# masked = filtered
 
-hough_space = helpFunctions.compute_hough_space(masked)
+hough_space = helpFunctions.compute_hough_space_2(masked)
 
-titles = ['original image', 'gray', 'laplaced', 'mask', 'masked', 'hough space']
-images = [img, gray, laplaced, mask, masked, hough_space]
+titles = ['original image', 'gray', 'laplaced', 'filtered', 'masked', 'hough space']
+images = [img, gray, laplaced, filtered, masked, hough_space]
 for i in range(len(images)):
     plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
     plt.title(titles[i])
     plt.xticks([]), plt.yticks([])
 plt.show()
-
-print(laplaced[2][1])
