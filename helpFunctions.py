@@ -163,61 +163,63 @@ def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
 
 
 # @jit
-def compute_hough_space_1(gradient):
-    y_max = len(gradient)
-    x_max = len(gradient[0])
-    r_max = int(math.hypot(x_max, y_max))
-    theta_max = 360
-    hough_space = np.zeros((r_max, theta_max))
-    for x1 in range(x_max):
-        for y1 in range(y_max):
-            if gradient[y1][x1] != 0:
-                for x2 in range(x1, x_max):
-                    for y2 in range(0, y_max):
-                        if gradient[y2][x2] != 0 and (x1 != x2 or y1 != y2):
-                            if x1 == x2:
-                                theta = 0
-                                r = x1
-                            else:
-                                coefs = np.polyfit([x1, x2], [y1, y2], 1)
-                                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
-                                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
-                                if coefs[1] < 0:
-                                    theta = - (90 - alpha)
-                                else:
-                                    theta = 90 + alpha
-                            theta = (theta + 180) % 360  # rotate theta
-                            hough_space[r][theta] = hough_space[r][theta] + 1
-    hough_space = hough_space * 255 / hough_space.max()
-    return hough_space
+# def compute_hough_space_1(gradient):
+#     y_max = len(gradient)
+#     x_max = len(gradient[0])
+#     r_max = int(math.hypot(x_max, y_max))
+#     theta_max = 360
+#     hough_space = np.zeros((r_max, theta_max))
+#     for x1 in range(x_max):
+#         for y1 in range(y_max):
+#             if gradient[y1][x1] != 0:
+#                 for x2 in range(x1, x_max):
+#                     for y2 in range(0, y_max):
+#                         if gradient[y2][x2] != 0 and (x1 != x2 or y1 != y2):
+#                             if x1 == x2:
+#                                 theta = 0
+#                                 r = x1
+#                             else:
+#                                 coefs = np.polyfit([x1, x2], [y1, y2], 1)
+#                                 r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+#                                 alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+#                                 if coefs[1] < 0:
+#                                     theta = - (90 - alpha)
+#                                 else:
+#                                     theta = 90 + alpha
+#                             theta = (theta + 180) % 360  # rotate theta
+#                             hough_space[r][theta] = hough_space[r][theta] + 1
+#     hough_space = hough_space * 255 / hough_space.max()
+#     return hough_space
+#
+#
+# def compute_hough_space_1_optimized(gradient):
+#     points = mat_to_vector_of_relevant_points_1(gradient, 0)
+#     y_max = len(gradient)
+#     x_max = len(gradient[0])
+#     r_max = int(math.hypot(x_max, y_max))
+#     theta_max = 360
+#     hough_space = np.zeros((r_max, theta_max))
+#     for p1 in range(len(points)):
+#         [y1, x1] = points[p1]
+#         for p2 in range(p1 + 1, len(points)):
+#             [y2, x2] = points[p2]
+#             if x1 == x2:
+#                 theta = 0
+#                 r = x1
+#             else:
+#                 coefs = np.polyfit([x1, x2], [y1, y2], 1)
+#                 r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+#                 alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+#                 if coefs[1] < 0:
+#                     theta = - (90 - alpha)
+#                 else:
+#                     theta = 90 + alpha
+#             theta = (theta + 180) % 360  # rotate theta
+#             hough_space[r][theta] = hough_space[r][theta] + 1
+#     hough_space = hough_space * 255 / hough_space.max()
+#     return hough_space
 
 
-def compute_hough_space_1_optimized(gradient):
-    points = mat_to_vector_of_relevant_points_1(gradient, 0)
-    y_max = len(gradient)
-    x_max = len(gradient[0])
-    r_max = int(math.hypot(x_max, y_max))
-    theta_max = 360
-    hough_space = np.zeros((r_max, theta_max))
-    for p1 in range(len(points)):
-        [y1, x1] = points[p1]
-        for p2 in range(p1 + 1, len(points)):
-            [y2, x2] = points[p2]
-            if x1 == x2:
-                theta = 0
-                r = x1
-            else:
-                coefs = np.polyfit([x1, x2], [y1, y2], 1)
-                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
-                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
-                if coefs[1] < 0:
-                    theta = - (90 - alpha)
-                else:
-                    theta = 90 + alpha
-            theta = (theta + 180) % 360  # rotate theta
-            hough_space[r][theta] = hough_space[r][theta] + 1
-    hough_space = hough_space * 255 / hough_space.max()
-    return hough_space
 
 
 def compute_hough_space_1_optimized2(gradient):
@@ -267,18 +269,154 @@ def compute_hough_space_2(gradient):
     return hough_space
 
 
-def compute_hough_space_2_optimized(gradient):
-    points = matToVectorOfRelevantPoints_2(gradient, 0)
-    y_max = len(gradient)
-    x_max = len(gradient[0])
-    r_max = int(math.hypot(x_max, y_max))
-    theta_max = 180
-    hough_space = np.zeros((r_max, theta_max))
-    for p in points:
-        x, y = p
-        for theta in range(0, 179):
-            theta_rad = theta * np.pi / 180
-            r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad)))
-            hough_space[r][theta] = hough_space[r][theta] + 1
-    hough_space = hough_space * 255 / hough_space.max()
-    return hough_space
+# def compute_hough_space_2_optimized(gradient):
+#     points = matToVectorOfRelevantPoints_2(gradient, 0)
+#     y_max = len(gradient)
+#     x_max = len(gradient[0])
+#     r_max = int(math.hypot(x_max, y_max))
+#     theta_max = 180
+#     hough_space = np.zeros((r_max, theta_max))
+#     for p in points:
+#         x, y = p
+#         for theta in range(0, 179):
+#             theta_rad = theta * np.pi / 180
+#             r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad)))
+#             hough_space[r][theta] = hough_space[r][theta] + 1
+#     hough_space = hough_space * 255 / hough_space.max()
+#     return hough_space
+
+
+def createLineIterator(points, img):
+    """
+    Produces and array that consists of the coordinates and intensities of each pixel in a line between two points
+
+    Parameters:
+        -P1: a numpy array that consists of the coordinate of the first point (x,y)
+        -P2: a numpy array that consists of the coordinate of the second point (x,y)
+        -img: the image being processed
+
+    Returns:
+        -it: a numpy array that consists of the coordinates and intensities of each pixel in the radii (shape: [numPixels, 3], row = [x,y,intensity])
+    """
+    # define local variables for readability
+    P1 = points[0]
+    P2 = points[2]
+    imageH = img.shape[0]
+    imageW = img.shape[1]
+    P1X = P1[0]
+    P1Y = P1[1]
+    P2X = P2[0]
+    P2Y = P2[1]
+
+    # difference and absolute difference between points
+    # used to calculate slope and relative location between points
+    dX = P2X - P1X
+    dY = P2Y - P1Y
+    dXa = np.abs(dX)
+    dYa = np.abs(dY)
+
+    # predefine numpy array for output based on distance between points
+    itbuffer = np.empty(shape=(np.maximum(dYa, dXa), 3), dtype=np.float32)
+    itbuffer.fill(np.nan)
+
+    # Obtain coordinates along the line using a form of Bresenham's algorithm
+    negY = P1Y > P2Y
+    negX = P1X > P2X
+    if P1X == P2X:  # vertical line segment
+        itbuffer[:, 0] = P1X
+        if negY:
+            itbuffer[:, 1] = np.arange(P1Y - 1, P1Y - dYa - 1, -1)
+        else:
+            itbuffer[:, 1] = np.arange(P1Y + 1, P1Y + dYa + 1)
+    elif P1Y == P2Y:  # horizontal line segment
+        itbuffer[:, 1] = P1Y
+        if negX:
+            itbuffer[:, 0] = np.arange(P1X - 1, P1X - dXa - 1, -1)
+        else:
+            itbuffer[:, 0] = np.arange(P1X + 1, P1X + dXa + 1)
+    else:  # diagonal line segment
+        steepSlope = dYa > dXa
+        if steepSlope:
+            slope = dX.astype(np.float32) / dY.astype(np.float32)
+            if negY:
+                itbuffer[:, 1] = np.arange(P1Y - 1, P1Y - dYa - 1, -1)
+            else:
+                itbuffer[:, 1] = np.arange(P1Y + 1, P1Y + dYa + 1)
+            itbuffer[:, 0] = (slope * (itbuffer[:, 1] - P1Y)).astype(np.int) + P1X
+        else:
+            slope = dY.astype(np.float32) / dX.astype(np.float32)
+            if negX:
+                itbuffer[:, 0] = np.arange(P1X - 1, P1X - dXa - 1, -1)
+            else:
+                itbuffer[:, 0] = np.arange(P1X + 1, P1X + dXa + 1)
+            itbuffer[:, 1] = (slope * (itbuffer[:, 0] - P1X)).astype(np.int) + P1Y
+
+    # Remove points outside of image
+    colX = itbuffer[:, 0]
+    colY = itbuffer[:, 1]
+    itbuffer = itbuffer[(colX >= 0) & (colY >= 0) & (colX < imageW) & (colY < imageH)]
+
+    # Get intensities from img ndarray
+    itbuffer[:, 2] = img[itbuffer[:, 1].astype(np.uint), itbuffer[:, 0].astype(np.uint)]
+
+    return itbuffer
+
+
+def findCoordinatesOfMaxValues(matrix, amountOfValues):
+    flatted = matrix.flatten()
+    indexes = np.argpartition(flatted, -1 * amountOfValues)[-1 * amountOfValues:]
+    # topValues=flatted[indexes]
+    """
+        return in [x,y] format
+    """
+    matrixIndexes = [np.array([int(index % len(matrix[0])), int(index / len(matrix[0]))]) for index in indexes]
+    return matrixIndexes
+
+
+def findLineTwoVer(matrix, coordinate):
+    r = coordinate[0]
+    theta = coordinate[1] - 180
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    y_max = len(matrix)
+    x_max = len(matrix[0])
+    alpha = 0
+    if theta == 0:  # line is of the form X=const
+        return [np.array([x, 0]), np.array([x, y_max])]  # [p1,p2]
+    if theta == 90:  # line is of the form y=const
+        return [np.array([0, y]), np.array([x_max, y])]  # [p1,p2]
+    if theta > 0:
+        alpha = 90 - theta
+    if theta < 0:
+        alpha = 90 + theta  # also equal 90-abs(theta)
+    m = np.arctan(alpha)
+    b = y - m * x
+    # y=mx+b
+    if theta > 0 and theta < 90:
+        x2 = -b / m
+        y2 = 0
+        if x2 > x_max:
+            x2 = x_max
+            y2 = m * x2 + b
+        return [np.array([0, b]), np.array([x2, y2])]  # [p1,p2]
+    if theta > 90:
+        y2 = m * x_max + b
+        x2 = x_max
+        if y2 > y_max:
+            y2 = y_max
+            x2 = (y2 - b) / m
+        return [np.array([0, b]), np.array([x2, y2])]  # [p1,p2]
+    if theta < 0:
+        y2 = m * x_max + b
+        x2 = x_max
+        if y2 > y_max:
+            y2 = y_max
+            x2 = (y2 - b) / m
+        return [np.array([-b / m, 0]), np.array([x2, y2])]  # [p1,p2]
+    return []
+
+
+def findMaxValuedLines(matrix, amountOfLines=20):
+    lines = [createLineIterator(findLineTwoVer(matrix, coordinate), matrix)
+             for coordinate in findCoordinatesOfMaxValues(matrix, amountOfLines)]
+    return lines
