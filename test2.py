@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import helpFunctions
 
-from numba import jit, cuda
 # Reading the required image in
 # which operations are to be done.
 # Make sure that the image is in the same
@@ -27,7 +26,8 @@ window_name = "laplace demo"
 laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
 
 # filter
-filtered = helpFunctions.filter_gradient(laplaced, 0)
+# filtered = helpFunctions.filter_gradient(laplaced, 0)
+filtered = laplaced
 
 # mask
 maskAddress = "imageParal.jpg"
@@ -37,7 +37,7 @@ mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 #masked = helpFunctions.apply_mask(filtered, mask)
 masked = filtered
 
-hough_space = helpFunctions.compute_hough_space_1_optimized2(masked)
+hough_space = helpFunctions.compute_hough_space_1(masked)
 
 titles = ['original image', 'gray', 'laplaced', 'filtered', 'masked', 'hough space']
 images = [img, gray, laplaced, filtered, masked, hough_space]
