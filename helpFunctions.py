@@ -268,17 +268,17 @@ def compute_hough_space_2(gradient):
 
 
 def compute_hough_space_2_optimized(gradient):
-    points = matToVectorOfRelevantPoints_2(gradient, 0)
+    points = mat_to_vector_of_relevant_points_2(gradient, 0)
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 180
-    hough_space = np.zeros((r_max, theta_max))
+    hough_space = np.zeros((2 * r_max, theta_max))
     for p in points:
         x, y = p
         for theta in range(0, 179):
             theta_rad = theta * np.pi / 180
-            r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad)))
+            r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
             hough_space[r][theta] = hough_space[r][theta] + 1
     hough_space = hough_space * 255 / hough_space.max()
     return hough_space
