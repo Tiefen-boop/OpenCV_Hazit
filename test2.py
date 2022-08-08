@@ -13,7 +13,7 @@ from collections import defaultdict
 from matplotlib import pyplot as plt
 
 # image
-imgAddress = "01562.png"
+imgAddress = "images/imagesForTesting/image.jpg"
 img = cv2.imread(imgAddress)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 gray = cv2.GaussianBlur(gray,(3,3),0)
@@ -28,14 +28,14 @@ laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
 filtered = helpFunctions.filter_gradient(laplaced, 0)
 
 # mask
-maskAddress = "01562_mask.png"
+maskAddress = "imageParal.jpg"
 mask = cv2.imread(maskAddress)
 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 
-masked = helpFunctions.apply_mask(filtered, mask)
-# masked = filtered
+#masked = helpFunctions.apply_mask(filtered, mask)
+masked = filtered
 
-hough_space = helpFunctions.compute_hough_space_2(masked)
+hough_space = helpFunctions.compute_hough_space_1_optimized(masked)
 
 titles = ['original image', 'gray', 'laplaced', 'filtered', 'masked', 'hough space']
 images = [img, gray, laplaced, filtered, masked, hough_space]

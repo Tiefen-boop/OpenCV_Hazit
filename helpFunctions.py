@@ -170,6 +170,48 @@ def compute_hough_space(gradient):
     return hough_space
 
 
+def matToVectorOfRelaventPoints(gradient, param=0):
+    points = []
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for x1 in range(x_max):
+        for y1 in range(y_max):
+            if gradient[y1][x1] != 0:
+                points.append([y1, x1])
+    return points
+
+
+def compute_hough_space_1_optimized(gradient):
+    points = matToVectorOfRelaventPoints(gradient, 0)
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for p1 in range(len(points)):
+        [y1, x1] = points[p1]
+        for p2 in range(p1 + 1, len(points)):
+            [y2, x2] = points[p2]
+            if x1 == x2:
+                theta = 0
+                r = x1
+            else:
+                coefs = np.polyfit([x1, x2], [y1, y2], 1)
+                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+                if coefs[1] < 0:
+                    theta = - (90 - alpha)
+                else:
+                    theta = 90 + alpha
+            theta = (theta + 180) % 360  # rotate theta
+            hough_space[r][theta] = hough_space[r][theta] + 1
+    hough_space = hough_space * 255 / hough_space.max()
+    return hough_space
+
+
 def compute_hough_space_2(gradient):
     y_max = len(gradient)
     x_max = len(gradient[0])
