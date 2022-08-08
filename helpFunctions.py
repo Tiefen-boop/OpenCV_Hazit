@@ -169,14 +169,12 @@ def compute_hough_space_1(gradient):
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    counter = 0
     for x1 in range(x_max):
         for y1 in range(y_max):
             if gradient[y1][x1] != 0:
                 for x2 in range(x1, x_max):
                     for y2 in range(0, y_max):
                         if gradient[y2][x2] != 0 and (x1 != x2 or y1 != y2):
-                            counter += 1
                             if x1 == x2:
                                 theta = 0
                                 r = x1
@@ -191,7 +189,6 @@ def compute_hough_space_1(gradient):
                             theta = (theta + 180) % 360  # rotate theta
                             hough_space[r][theta] = hough_space[r][theta] + 1
     hough_space = hough_space * 255 / hough_space.max()
-    print(str(counter))
     return hough_space
 
 
@@ -230,9 +227,7 @@ def compute_hough_space_1_optimized2(gradient):
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    counter = 0
     for p1, p2 in itertools.combinations(points, 2):
-        counter += 1
         x1, y1 = p1
         x2, y2 = p2
         if x1 == x2:
@@ -251,7 +246,6 @@ def compute_hough_space_1_optimized2(gradient):
         theta = (theta + 180) % 360  # rotate theta
         hough_space[r][theta] = hough_space[r][theta] + 1
     hough_space = hough_space * 255 / hough_space.max()
-    print(str(counter))
     return hough_space
 
 
