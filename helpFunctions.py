@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import cv2
 import numpy as np
+from numba import jit, cuda
 
 
 def lines_to_map(lines):
@@ -141,6 +142,7 @@ def apply_mask(edges, mask):
     return masked
 
 
+# @jit
 def compute_hough_space(gradient):
     y_max = len(gradient)
     x_max = len(gradient[0])
@@ -170,7 +172,7 @@ def compute_hough_space(gradient):
     return hough_space
 
 
-def matToVectorOfRelaventPoints(gradient, param=0):
+def matToVectorOfRelevantPoints_1(gradient, param=0):
     points = []
     y_max = len(gradient)
     x_max = len(gradient[0])
@@ -185,7 +187,7 @@ def matToVectorOfRelaventPoints(gradient, param=0):
 
 
 def compute_hough_space_1_optimized(gradient):
-    points = matToVectorOfRelaventPoints(gradient, 0)
+    points = matToVectorOfRelevantPoints_1(gradient, 0)
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -226,5 +228,51 @@ def compute_hough_space_2(gradient):
                     r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad)))
                     theta = (theta + 180) % 360  # rotate theta
                     hough_space[r][theta] = hough_space[r][theta] + 1
+    hough_space = hough_space * 255 / hough_space.max()
+    return hough_space
+
+
+def matToVectorOfRelevantPoints_2(gradient, threshold=0):
+    points = []
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for x1 in range(x_max):
+        for y1 in range(y_max):
+            if gradient[y1][x1] > threshold:
+                points.append(x1)
+                points.append(y1)
+    return points
+
+
+def compute_hough_space_1_optimized2(gradient):
+    points = matToVectorOfRelevantPoints_2(gradient, 0)
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for p1 in range(len(points)):
+        x1 = points[p1]
+        y1 = points[p1 + 1]
+        for p2 in range(p1 + 2, len(points)):
+            x2 = points[p2]
+            y2 = points[p2 + 1]
+            if x1 == x2:
+                theta = 0
+                r = x1
+            else:
+                coefs = np.polyfit([x1, x2], [y1, y2], 1)
+                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+                if coefs[1] < 0:
+                    theta = - (90 - alpha)
+                else:
+                    theta = 90 + alpha
+            theta = (theta + 180) % 360  # rotate theta
+            hough_space[r][theta] = hough_space[r][theta] + 1
+        p1 += 1
     hough_space = hough_space * 255 / hough_space.max()
     return hough_space
