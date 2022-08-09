@@ -39,7 +39,7 @@ if __name__ == '__main__':
     with open("hough_space.txt") as textFile:
         hough_space = [line.split() for line in textFile]
     hough_space = np.array(hough_space, dtype=int)
-    imgAddress = "images/imagesForTesting/imageHalfSize.jpg"
+    imgAddress = "images/imagesForTesting/988Cropped.jpg"
     img = cv2.imread(imgAddress)
     with open("laplaced.txt") as textFile:
         laplaced = [line.split() for line in textFile]

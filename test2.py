@@ -15,12 +15,9 @@ from matplotlib import pyplot as plt
 
 from findingLinesByhoughSpace import continueHoughSpace
 
-matrix=np.array([[1,2,10],[1,4,3],[1,9,3],[20,2,3],[1,2,3]],dtype=int)
-np.savetxt('test.txt', matrix, fmt ='%.0f')
-with open("test.txt") as textFile:
-    lines = [line.split() for line in textFile]
+
 # image
-imgAddress = "images/imagesForTesting/imageHalfSize.jpg"
+imgAddress = "images/imagesForTesting/988Cropped.jpg"
 img = cv2.imread(imgAddress)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 gray = cv2.GaussianBlur(gray,(3,3),0)
@@ -30,6 +27,7 @@ ddepth = cv2.CV_64F
 kernel_size = 3
 window_name = "laplace demo"
 laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
+
 np.savetxt('laplaced.txt', laplaced,fmt ='%.0f')
 # filter
 #filtered = helpFunctions.filter_gradient(laplaced, 220)

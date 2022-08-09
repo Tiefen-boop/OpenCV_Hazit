@@ -203,13 +203,16 @@ def compute_hough_space_1_optimized(gradient):
     hough_space = np.zeros((r_max, theta_max))
     for p1 in tqdm (range(len(points))):
         [x1, y1] = points[p1]
+
         for p2 in range(p1 + 1, len(points)):
             [x2, y2] = points[p2]
             if x1 == x2:
                 theta = 0
                 r = x1
             else:
-                coefs = np.polyfit([x1, x2], [y1, y2], 1)
+                m=(y2-y1)/(x2-x1)
+                coefs=[m,y1-m*x1]
+                # coefs = np.polyfit([x1, x2], [y1, y2], 1)
                 r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
                 alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
                 if coefs[1] < 0:
