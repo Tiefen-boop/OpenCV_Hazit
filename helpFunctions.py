@@ -209,7 +209,7 @@ def compute_hough_space_1_optimized2(gradient):
         r = int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))) + r_max
         theta = (theta + 180) % 360  # rotate theta
         hough_space[r][theta] = hough_space[r][theta] + (gradient[y1][x1] + gradient[y2][x2])
-    hough_space = hough_space / hough_space.max()
+    hough_space = hough_space * 255 / hough_space.max()
     return hough_space
 
 
@@ -220,13 +220,13 @@ def compute_hough_space_2(gradient):
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 180
     hough_space = np.zeros((2 * r_max, theta_max))
-    for p in points:
+    for p in tqdm(points):
         x, y = p
         for theta in range(0, 179):
             theta_rad = theta * np.pi / 180
             r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
-            hough_space[r][theta] = hough_space[r][theta] + gradient[y][x]
-    hough_space = hough_space / hough_space.max()
+            hough_space[r][theta] = hough_space[r][theta] + 1 #+ gradient[y][x]
+    hough_space = hough_space * 255 / hough_space.max()
     return hough_space
 
 
