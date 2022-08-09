@@ -20,7 +20,7 @@ np.savetxt('test.txt', matrix, fmt ='%.0f')
 with open("test.txt") as textFile:
     lines = [line.split() for line in textFile]
 # image
-imgAddress = "images/imagesForTesting/imageQuarterSize.jpg"
+imgAddress = "images/imagesForTesting/imageHalfSize.jpg"
 img = cv2.imread(imgAddress)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 gray = cv2.GaussianBlur(gray,(3,3),0)
@@ -30,9 +30,9 @@ ddepth = cv2.CV_64F
 kernel_size = 3
 window_name = "laplace demo"
 laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
-
+np.savetxt('laplaced.txt', laplaced,fmt ='%.0f')
 # filter
-# filtered = helpFunctions.filter_gradient(laplaced, 0)
+#filtered = helpFunctions.filter_gradient(laplaced, 220)
 filtered = laplaced
 
 # mask

@@ -4,6 +4,8 @@ from collections import defaultdict
 import cv2
 import numpy as np
 import itertools
+
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 def lines_to_map(lines):
@@ -142,7 +144,7 @@ def apply_mask(edges, mask):
     return masked
 
 
-def mat_to_vector_of_relevant_points_1(gradient, param=0):
+def mat_to_vector_of_relevant_points_1(gradient, threshold=0):
     points = []
     y_max = len(gradient)
     x_max = len(gradient[0])
@@ -151,8 +153,8 @@ def mat_to_vector_of_relevant_points_1(gradient, param=0):
     hough_space = np.zeros((r_max, theta_max))
     for x1 in range(x_max):
         for y1 in range(y_max):
-            if gradient[y1][x1] != 0:
-                points.append([y1, x1])
+            if gradient[y1][x1] > threshold:
+                points.append([x1, y1])
     return points
 
 
@@ -193,16 +195,16 @@ def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
 #
 #
 def compute_hough_space_1_optimized(gradient):
-    points = mat_to_vector_of_relevant_points_1(gradient, 0)
+    points = mat_to_vector_of_relevant_points_2(gradient, 220)
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
     for p1 in tqdm (range(len(points))):
-        [y1, x1] = points[p1]
+        [x1, y1] = points[p1]
         for p2 in range(p1 + 1, len(points)):
-            [y2, x2] = points[p2]
+            [x2, y2] = points[p2]
             if x1 == x2:
                 theta = 0
                 r = x1
@@ -374,17 +376,18 @@ def findCoordinatesOfMaxValues(matrix, amountOfValues):
 
 
 def findLineTwoVer(matrix, coordinate):
-    r = coordinate[0]
-    theta =( coordinate[1] - 180)% 360
-    x = r * np.cos(theta)
-    y = r * np.sin(theta)
+    r = coordinate[1]
+    theta =( coordinate[0] - 180)% 360
+    theta_rad = theta * np.pi / 180
+    x = r * np.cos(theta_rad)
+    y = r * np.sin(theta_rad)
     y_max = len(matrix)
     x_max = len(matrix[0])
     alpha = 0
     if theta == 0:  # line is of the form X=const
-        return [np.array([x, 0]), np.array([x, y_max])]  # [p1,p2]
+        return [np.array([round(x), 0]), np.array([round(x), round(y_max)])]  # [p1,p2]
     if theta == 90:  # line is of the form y=const
-        return [np.array([0, y]), np.array([x_max, y])]  # [p1,p2]
+        return [np.array([0, round(y)]), np.array([round(x_max), round(y)])]  # [p1,p2]
     if theta > 0:
         alpha = 90 - theta
     if theta < 0:
@@ -416,7 +419,21 @@ def findLineTwoVer(matrix, coordinate):
     return []
 
 
-def findMaxValuedLines(matrix, amountOfLines=20):
-    lines = [createLineIterator(findLineTwoVer(matrix, coordinate), matrix)
-             for coordinate in findCoordinatesOfMaxValues(matrix, amountOfLines)]
+def findMaxValuedLines(houghSpace, laplaced, amountOfLines=20):
+    lines = [createLineIterator(findLineTwoVer(laplaced, coordinate), laplaced)
+             for coordinate in findCoordinatesOfMaxValues(houghSpace, amountOfLines)]
     return lines
+
+def drawAllLines(img,lines):
+    for line in lines:
+        P1=line[0]
+        P2=line[-1]
+        cv2.line(img, (round(P1[0]), round(P1[1])), (round(P2[0]), round(P2[1])), (0, 0, 255), 2)
+
+    titles = ['original image', 'hough_space', 'laplaced']
+    images = [img]
+    for i in range(len(images)):
+        plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
+        plt.title(titles[i])
+        plt.xticks([]), plt.yticks([])
+    plt.show()

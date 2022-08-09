@@ -39,5 +39,18 @@ if __name__ == '__main__':
     with open("hough_space.txt") as textFile:
         hough_space = [line.split() for line in textFile]
     hough_space = np.array(hough_space, dtype=int)
-    lines = helpFunctions.findMaxValuedLines(hough_space, 2)
+    imgAddress = "images/imagesForTesting/imageHalfSize.jpg"
+    img = cv2.imread(imgAddress)
+    with open("laplaced.txt") as textFile:
+        laplaced = [line.split() for line in textFile]
+    laplaced = np.array(laplaced, dtype=int)
+    titles = ['original image','hough_space','laplaced']
+    images = [img,hough_space,laplaced]
+    for i in range(len(images)):
+        plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
+        plt.title(titles[i])
+        plt.xticks([]), plt.yticks([])
+    plt.show()
+    lines = helpFunctions.findMaxValuedLines(hough_space,laplaced,10)
     print(lines)
+    helpFunctions.drawAllLines(img,lines)
