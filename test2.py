@@ -44,6 +44,7 @@ mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 masked = filtered
 
 
+
 # from alive_progress import alive_bar
 #
 # with alive_bar(1000) as bar:
