@@ -1,54 +1,60 @@
-import os
+import getopt
+import sys
 
-import cv2
-import numpy as np
-import helpFunctions
-
-# Reading the required image in
-# which operations are to be done.
-# Make sure that the image is in the same
-# directory in which this python program is
-
-from collections import defaultdict
-
-from matplotlib import pyplot as plt
-
-from findingLinesByhoughSpace import continueHoughSpace
+from findingLinesByhoughSpace import continue_hough_space
+from helpFunctions import *
 
 
-# image
-imgAddress = "images/imagesForTesting/988Cropped.jpg"
-img = cv2.imread(imgAddress)
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-gray = cv2.GaussianBlur(gray,(3,3),0)
+def main(argv):
+    image_found = False
+    image = None
+    mask_found = False
+    mask = None
+    try:
+        opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask="])
+    except getopt.GetoptError:
+        print('test.py -i <input_image> [-m <input_mask>]')
+        sys.exit(2)
+    for opt, arg in opts:
+        match opt:
+            case '-h':
+                print('test.py -i <input_image> [-m <input_mask>]')
+                sys.exit()
+            case "-i" | "--image":
+                image_found = True
+                image = cv2.imread(arg)
+            case "-m" | "--mask":
+                mask_found = True
+                mask = cv2.imread(arg)
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    if not image_found:
+        print('no image: test.py -i <input_image> [-m <input_mask>]')
+        sys.exit(2)
+    # image
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
-# laplacian
-ddepth = cv2.CV_64F
-kernel_size = 3
-window_name = "laplace demo"
-laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
+    # laplacian
+    ddepth = cv2.CV_64F
+    kernel_size = 3
+    window_name = "laplace demo"
+    laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
 
-np.savetxt('laplaced.txt', laplaced,fmt ='%.0f')
-# filter
-#filtered = helpFunctions.filter_gradient(laplaced, 220)
-filtered = laplaced
+    np.savetxt('laplaced.txt', laplaced, fmt='%.0f')
+    # filter
+    # filtered = helpFunctions.filter_gradient(laplaced, 220)
+    filtered = laplaced
 
-# mask
-maskAddress = "imageParal.jpg"
-mask = cv2.imread(maskAddress)
-mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    # mask
+    masked = filtered
+    if mask_found:
+        masked = apply_mask(filtered, mask)
 
-#masked = helpFunctions.apply_mask(filtered, mask)
-masked = filtered
+    hough_space = compute_hough_space_1_optimized2(masked)
+    np.savetxt('hough_space.txt', hough_space, fmt='%.0f')
+    images = [image, gray, laplaced, filtered, masked, hough_space]
+    continue_hough_space(images, hough_space)
 
 
-
-# from alive_progress import alive_bar
-#
-# with alive_bar(1000) as bar:
-#     for i in helpFunctions.compute_hough_space_1_optimized2(masked):
-#         hough_space= bar()
-hough_space = helpFunctions.compute_hough_space_1_optimized(masked)
-np.savetxt('hough_space.txt', hough_space,fmt ='%.0f')
-images = [img, gray, laplaced, filtered, masked, hough_space]
-continueHoughSpace(images,hough_space)
+if __name__ == "__main__":
+    main(sys.argv[1:])
