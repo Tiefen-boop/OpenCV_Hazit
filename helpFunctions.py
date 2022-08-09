@@ -4,7 +4,7 @@ from collections import defaultdict
 import cv2
 import numpy as np
 import itertools
-
+from tqdm import tqdm
 
 def lines_to_map(lines):
     cleaned = [[line[0][0], round(line[0][1], 3)] for line in lines]
@@ -192,32 +192,32 @@ def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
 #     return hough_space
 #
 #
-# def compute_hough_space_1_optimized(gradient):
-#     points = mat_to_vector_of_relevant_points_1(gradient, 0)
-#     y_max = len(gradient)
-#     x_max = len(gradient[0])
-#     r_max = int(math.hypot(x_max, y_max))
-#     theta_max = 360
-#     hough_space = np.zeros((r_max, theta_max))
-#     for p1 in range(len(points)):
-#         [y1, x1] = points[p1]
-#         for p2 in range(p1 + 1, len(points)):
-#             [y2, x2] = points[p2]
-#             if x1 == x2:
-#                 theta = 0
-#                 r = x1
-#             else:
-#                 coefs = np.polyfit([x1, x2], [y1, y2], 1)
-#                 r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
-#                 alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
-#                 if coefs[1] < 0:
-#                     theta = - (90 - alpha)
-#                 else:
-#                     theta = 90 + alpha
-#             theta = (theta + 180) % 360  # rotate theta
-#             hough_space[r][theta] = hough_space[r][theta] + 1
-#     hough_space = hough_space * 255 / hough_space.max()
-#     return hough_space
+def compute_hough_space_1_optimized(gradient):
+    points = mat_to_vector_of_relevant_points_1(gradient, 0)
+    y_max = len(gradient)
+    x_max = len(gradient[0])
+    r_max = int(math.hypot(x_max, y_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
+    for p1 in tqdm (range(len(points))):
+        [y1, x1] = points[p1]
+        for p2 in range(p1 + 1, len(points)):
+            [y2, x2] = points[p2]
+            if x1 == x2:
+                theta = 0
+                r = x1
+            else:
+                coefs = np.polyfit([x1, x2], [y1, y2], 1)
+                r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+                alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+                if coefs[1] < 0:
+                    theta = - (90 - alpha)
+                else:
+                    theta = 90 + alpha
+            theta = (theta + 180) % 360  # rotate theta
+            hough_space[r][theta] = hough_space[r][theta] + 1
+    hough_space = hough_space * 255 / hough_space.max()
+    return hough_space
 
 
 
@@ -300,7 +300,7 @@ def createLineIterator(points, img):
     """
     # define local variables for readability
     P1 = points[0]
-    P2 = points[2]
+    P2 = points[1]
     imageH = img.shape[0]
     imageW = img.shape[1]
     P1X = P1[0]
@@ -375,7 +375,7 @@ def findCoordinatesOfMaxValues(matrix, amountOfValues):
 
 def findLineTwoVer(matrix, coordinate):
     r = coordinate[0]
-    theta = coordinate[1] - 180
+    theta =( coordinate[1] - 180)% 360
     x = r * np.cos(theta)
     y = r * np.sin(theta)
     y_max = len(matrix)
@@ -398,21 +398,21 @@ def findLineTwoVer(matrix, coordinate):
         if x2 > x_max:
             x2 = x_max
             y2 = m * x2 + b
-        return [np.array([0, b]), np.array([x2, y2])]  # [p1,p2]
+        return [np.array([0, round(b)]), np.array([round(x2), round(y2)])]  # [p1,p2]
     if theta > 90:
         y2 = m * x_max + b
         x2 = x_max
         if y2 > y_max:
             y2 = y_max
             x2 = (y2 - b) / m
-        return [np.array([0, b]), np.array([x2, y2])]  # [p1,p2]
+        return [np.array([0, round(b)]), np.array([round(x2), round(y2)])]  # [p1,p2]
     if theta < 0:
         y2 = m * x_max + b
         x2 = x_max
         if y2 > y_max:
             y2 = y_max
             x2 = (y2 - b) / m
-        return [np.array([-b / m, 0]), np.array([x2, y2])]  # [p1,p2]
+        return [np.array([round(-b / m), 0]), np.array([round(x2), round(y2)])]  # [p1,p2]
     return []
 
 

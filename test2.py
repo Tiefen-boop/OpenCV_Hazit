@@ -13,14 +13,14 @@ from collections import defaultdict
 
 from matplotlib import pyplot as plt
 
-
+from findingLinesByhoughSpace import continueHoughSpace
 
 matrix=np.array([[1,2,10],[1,4,3],[1,9,3],[20,2,3],[1,2,3]],dtype=int)
-np.savetxt('test.txt', matrix)
+np.savetxt('test.txt', matrix, fmt ='%.0f')
 with open("test.txt") as textFile:
     lines = [line.split() for line in textFile]
 # image
-imgAddress = "images/imagesForTesting/image.jpg"
+imgAddress = "images/imagesForTesting/imageQuarterSize.jpg"
 img = cv2.imread(imgAddress)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 gray = cv2.GaussianBlur(gray,(3,3),0)
@@ -44,20 +44,12 @@ mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
 masked = filtered
 
 
-from alive_progress import alive_bar
-
-
-hough_space = helpFunctions.compute_hough_space_1_optimized2(masked)
-np.savetxt('hough_space.txt', hough_space)
-# with open("test.txt") as textFile:
-#     lines = [line.split() for line in textFile]
-lines=helpFunctions.findMaxValuedLines(hough_space,2)
-print(lines)
-
-titles = ['original image', 'gray', 'laplaced', 'filtered', 'masked', 'hough space']
+# from alive_progress import alive_bar
+#
+# with alive_bar(1000) as bar:
+#     for i in helpFunctions.compute_hough_space_1_optimized2(masked):
+#         hough_space= bar()
+hough_space = helpFunctions.compute_hough_space_1_optimized(masked)
+np.savetxt('hough_space.txt', hough_space,fmt ='%.0f')
 images = [img, gray, laplaced, filtered, masked, hough_space]
-for i in range(len(images)):
-    plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
-    plt.title(titles[i])
-    plt.xticks([]), plt.yticks([])
-plt.show()
+continueHoughSpace(images,hough_space)
