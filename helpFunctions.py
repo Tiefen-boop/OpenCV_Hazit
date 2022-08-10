@@ -369,12 +369,26 @@ def find_line_two_ver(matrix, coordinate):
 def find_max_valued_lines(hough_space, laplaced, amount_of_lines=20):
     lines = [create_line_iterator(find_line_two_ver(laplaced, coordinate), laplaced)
              for coordinate in find_coordinates_of_max_values(hough_space, amount_of_lines)]
+    #limited_lines=[limit_line(line) for line in lines]
     lines = limit_lines_to_relevant_edges(lines)
     return lines
 
 
 """ the function gets an array of lines an return same lines but only between the points with a gradint>threshold"""
 
+def limit_line(line,threshold=1):
+    startInd = len(line)
+    for pointInd in range(len(line)):
+        if line[pointInd][2] >= threshold:
+            startInd = pointInd
+            break
+    line = line[startInd:]
+
+    for pointInd in range(len(line) - 1, 0, -1):
+        if line[pointInd][2] >= threshold:
+            line = line[0:pointInd]
+            break
+    return line
 
 def limit_lines_to_relevant_edges(lines, threshold=1):
     for lineInd in range(len(lines)):
@@ -386,7 +400,6 @@ def limit_lines_to_relevant_edges(lines, threshold=1):
                 break
         line = line[startInd:]
         lines[lineInd] = line
-        x=5
         for pointInd in range(len(line) - 1, 0, -1):
             if line[pointInd][2] >= threshold:
                 lines[lineInd] = line[0:pointInd]
