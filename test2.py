@@ -40,7 +40,6 @@ def main(argv):
     window_name = "laplace demo"
     laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
 
-    np.savetxt('laplaced.txt', laplaced, fmt='%.0f')
     # filter
     # filtered = helpFunctions.filter_gradient(laplaced, 220)
     filtered = laplaced
@@ -50,7 +49,7 @@ def main(argv):
     if mask_found:
         masked = apply_mask(filtered, mask)
 
-    hough_space = compute_hough_space_1_optimized2(masked)
+    hough_space = compute_hough_space_1_optimized(masked)
     np.savetxt('hough_space.txt', hough_space, fmt='%.0f')
     images = [image, gray, laplaced, filtered, masked, hough_space]
     continue_hough_space(images, hough_space)

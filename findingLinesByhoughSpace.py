@@ -39,7 +39,7 @@ if __name__ == '__main__':
     with open("hough_space.txt") as textFile:
         hough_space = [line.split() for line in textFile]
     hough_space = np.array(hough_space, dtype=int)
-    imgAddress = "01563.png"
+    imgAddress = "images/imagesForTesting/988Cropped.jpg"
     img = cv2.imread(imgAddress)
     with open("laplaced.txt") as textFile:
         laplaced = [line.split() for line in textFile]
@@ -51,6 +51,6 @@ if __name__ == '__main__':
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
     plt.show()
-    lines = helpFunctions.find_max_valued_lines(hough_space, laplaced, 20)
+    lines = helpFunctions.find_max_valued_lines(hough_space, laplaced, 10)
     print(lines)
     helpFunctions.draw_all_lines(img, lines)

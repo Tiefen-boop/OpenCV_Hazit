@@ -151,11 +151,16 @@ def mat_to_vector_of_relevant_points_1(gradient, threshold=0):
 def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
     points = np.array([[x, y] for y, x in itertools.product(range(len(gradient)), range(len(gradient[0]))) if
                        gradient[y][x] > threshold], dtype=int)
+
+    filter_func = lambda x: x if x>threshold else 0
+    # filter_func(gradient)
+    filterd=[[filter_func(x) for x in sublist]for sublist in gradient]
+    np.savetxt('laplaced.txt', filterd, fmt='%.0f')
     return points  # np.ndarray.flatten(points)
 
 
 def compute_hough_space_1_optimized(gradient):
-    points = mat_to_vector_of_relevant_points_2(gradient, 50)
+    points = mat_to_vector_of_relevant_points_2(gradient, 180)
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -225,7 +230,7 @@ def compute_hough_space_2(gradient):
         for theta in range(0, 179):
             theta_rad = theta * np.pi / 180
             r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
-            hough_space[r][theta] = hough_space[r][theta] + 1 #+ gradient[y][x]
+            hough_space[r][theta] = hough_space[r][theta] + 1  # + gradient[y][x]
     hough_space = hough_space * 255 / hough_space.max()
     return hough_space
 
@@ -364,16 +369,40 @@ def find_line_two_ver(matrix, coordinate):
 def find_max_valued_lines(hough_space, laplaced, amount_of_lines=20):
     lines = [create_line_iterator(find_line_two_ver(laplaced, coordinate), laplaced)
              for coordinate in find_coordinates_of_max_values(hough_space, amount_of_lines)]
+    lines = limit_lines_to_relevant_edges(lines)
+    return lines
+
+
+""" the function gets an array of lines an return same lines but only between the points with a gradint>threshold"""
+
+
+def limit_lines_to_relevant_edges(lines, threshold=1):
+    for lineInd in range(len(lines)):
+        line = lines[lineInd]
+        startInd = len(line)
+        for pointInd in range(len(line)):
+            if line[pointInd][2] >= threshold:
+                startInd = pointInd
+                break
+        line = line[startInd:]
+        lines[lineInd] = line
+        x=5
+        for pointInd in range(len(line) - 1, 0, -1):
+            if line[pointInd][2] >= threshold:
+                lines[lineInd] = line[0:pointInd]
+                break
     return lines
 
 
 def draw_all_lines(img, lines):
     for line in lines:
+        if line.size == 0:
+            continue
         p1 = line[0]
         p2 = line[-1]
         cv2.line(img, (round(p1[0]), round(p1[1])), (round(p2[0]), round(p2[1])), (0, 0, 255), 2)
 
-    titles = ['original image', 'hough_space', 'laplaced']
+    titles = ['original image']
     images = [img]
     for i in range(len(images)):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
