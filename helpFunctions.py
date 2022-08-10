@@ -152,9 +152,9 @@ def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
     points = np.array([[x, y] for y, x in itertools.product(range(len(gradient)), range(len(gradient[0]))) if
                        gradient[y][x] > threshold], dtype=int)
 
-    filter_func = lambda x: x if x>threshold else 0
+    filter_func = lambda x: x if x > threshold else 0
     # filter_func(gradient)
-    filterd=[[filter_func(x) for x in sublist]for sublist in gradient]
+    filterd = [[filter_func(x) for x in sublist] for sublist in gradient]
     np.savetxt('laplaced.txt', filterd, fmt='%.0f')
     return points  # np.ndarray.flatten(points)
 
@@ -185,7 +185,7 @@ def compute_hough_space_1_optimized(gradient):
                     theta = 90 + alpha
             theta = (theta + 180) % 360  # rotate theta
             hough_space[r][theta] = hough_space[r][theta] + 1
-    hough_space = hough_space * 255 / hough_space.max()
+    hough_space = hough_space # * 255 / hough_space.max()
     return hough_space
 
 
@@ -214,7 +214,7 @@ def compute_hough_space_1_optimized2(gradient):
         r = int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))) + r_max
         theta = (theta + 180) % 360  # rotate theta
         hough_space[r][theta] = hough_space[r][theta] + (gradient[y1][x1] + gradient[y2][x2])
-    hough_space = hough_space * 255 / hough_space.max()
+    hough_space = hough_space # * 255 / hough_space.max()
     return hough_space
 
 
@@ -231,7 +231,7 @@ def compute_hough_space_2(gradient):
             theta_rad = theta * np.pi / 180
             r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
             hough_space[r][theta] = hough_space[r][theta] + 1  # + gradient[y][x]
-    hough_space = hough_space * 255 / hough_space.max()
+    hough_space = hough_space # * 255 / hough_space.max()
     return hough_space
 
 
@@ -386,7 +386,6 @@ def limit_lines_to_relevant_edges(lines, threshold=1):
                 break
         line = line[startInd:]
         lines[lineInd] = line
-        x=5
         for pointInd in range(len(line) - 1, 0, -1):
             if line[pointInd][2] >= threshold:
                 lines[lineInd] = line[0:pointInd]
@@ -409,3 +408,11 @@ def draw_all_lines(img, lines):
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
     plt.show()
+
+
+def score_by_gradients_quality(line, threshold=0):
+    return np.sum(list(filter(lambda x: x >= threshold, line[:, 2]))) / line.size
+
+
+def score_by_density(line, threshold=0):
+    return np.count_nonzero(line[:, 2] <= threshold) * -1 / line.size

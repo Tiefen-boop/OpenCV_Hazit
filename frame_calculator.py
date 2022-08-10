@@ -1,6 +1,9 @@
 import getopt
 import sys
 
+import numpy as np
+
+import findingLinesByhoughSpace
 from findingLinesByhoughSpace import continue_hough_space
 from helpFunctions import *
 
@@ -39,6 +42,8 @@ def main(argv):
     kernel_size = 3
     window_name = "laplace demo"
     laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
+    # laplaced = np.abs(laplaced)
+    # continue_hough_space([laplaced])
 
     # filter
     # filtered = helpFunctions.filter_gradient(laplaced, 220)
@@ -52,7 +57,8 @@ def main(argv):
     hough_space = compute_hough_space_1_optimized(masked)
     np.savetxt('hough_space.txt', hough_space, fmt='%.0f')
     images = [image, gray, laplaced, filtered, masked, hough_space]
-    continue_hough_space(images, hough_space)
+    continue_hough_space(images)
+    findingLinesByhoughSpace.main(image, laplaced, hough_space)
 
 
 if __name__ == "__main__":
