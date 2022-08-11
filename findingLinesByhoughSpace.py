@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from helpFunctions import *
@@ -38,11 +40,11 @@ def main2(image, laplacians, hough_spaces):
     for i in range(len(laplacians)):
         for j in range(len(hough_spaces[i])):
             lines = find_max_valued_lines(hough_spaces[i][j], laplacians[i], 20)
-            drawn_images[i][j] = np.array([np.ndarray.copy(image) for i in range(len(scoring_methods))], dtype=object)
+            drawn_images[i][j] = [copy.deepcopy(image) for i in range(len(scoring_methods))]
             for k in range(len(scoring_methods)):
                 top_lines = get_top_lines(lines, laplacians[i], scoring_methods[k])
                 draw_all_lines(drawn_images[i][j][k], top_lines)
-    plottings = np.array([np.flatten(np.array([image, laplacians[i], drawn_images[i]], dtype=object)) for i in range(len(laplacians))], dtype=object)
+    plottings = [[image, laplacians[i],  drawn_images[i][0][0], drawn_images[i][0][1], drawn_images[i][1][0], drawn_images[i][1][1]] for i in range(len(laplacians))]
     plot_images(plottings[0], ['original', 'laplaces (normal)', 'O(n^2) by density', 'O(n^2) by quality', 'O(n) by density', 'O(n) by quality'])
     plot_images(plottings[1], ['original', 'laplaces (with abs)', 'O(n^2) by density', 'O(n^2) by quality', 'O(n) by density', 'O(n) by quality'])
 

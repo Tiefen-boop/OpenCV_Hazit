@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 def get_first_threshold(gradient):
-    return 100
+    return 50
 
 
 def get_second_threshold(gradient):
@@ -219,7 +219,7 @@ def compute_hough_space_1_optimized2(gradient, save_to=None, at_index=None):
         theta_rad = theta * np.pi / 180
         r = int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))) + r_max
         theta = (theta + 180) % 360  # rotate theta
-        hough_space[r][theta] = hough_space[r][theta] + (gradient[y1][x1] + gradient[y2][x2])
+        hough_space[r][theta] = hough_space[r][theta] + 1 # (gradient[y1][x1] + gradient[y2][x2])
     hough_space = hough_space  # * 255 / hough_space.max()
     if save_to is not None:
         save_to[at_index] = hough_space

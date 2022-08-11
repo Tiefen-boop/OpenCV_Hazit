@@ -52,7 +52,7 @@ def main(argv):
         masked = [apply_mask(laplaced, mask) for laplaced in laplacians]
 
     # hough space computation
-    computation_methods = [compute_hough_space_1_optimized2, compute_hough_space_2]
+    computation_methods = [compute_hough_space_1_optimized, compute_hough_space_2]
     threads = np.array([None] * (len(masked) * len(computation_methods)), dtype=object)
     hough_spaces = np.ndarray.copy(threads)
     for i in range(len(masked)):
