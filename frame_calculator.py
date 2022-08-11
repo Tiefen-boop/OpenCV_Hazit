@@ -55,7 +55,7 @@ def main(argv):
     computation_methods = [compute_hough_space_1_optimized2, compute_hough_space_2]
     threads = np.array([None] * (len(masked) * len(computation_methods)), dtype=object)
     hough_spaces = np.array([None] * (len(masked) * len(computation_methods)), dtype=object)
-    for i in range(len(masked)):
+    for i in range(0, len(masked), len(computation_methods)):
         for j in range(len(computation_methods)):
             threads[i + j] = threading.Thread(target=computation_methods[j],
                                               args=(masked[i], hough_spaces, i + j))
