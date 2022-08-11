@@ -1,11 +1,13 @@
+import datetime
 import math
 import sys
 from collections import defaultdict
-
+from datetime import datetime
 import cv2
 import numpy as np
 import itertools
-
+import time, random
+from atpbar import atpbar
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -219,7 +221,7 @@ def compute_hough_space_1_optimized2(gradient, save_to=None, at_index=None):
         theta_rad = theta * np.pi / 180
         r = int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))) + r_max
         theta = (theta + 180) % 360  # rotate theta
-        hough_space[r][theta] = hough_space[r][theta] + 1 # (gradient[y1][x1] + gradient[y2][x2])
+        hough_space[r][theta] = hough_space[r][theta] + 1  # (gradient[y1][x1] + gradient[y2][x2])
     hough_space = hough_space  # * 255 / hough_space.max()
     if save_to is not None:
         save_to[at_index] = hough_space
@@ -419,10 +421,55 @@ def limit_line_to_relevant_edges(line, threshold=1):
 
 def get_top_lines(lines, laplaced, method):
     lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
-    lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))], dtype=object)
+    lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
+                            dtype=object)
     indices_of_top4 = np.argpartition(lines_scored[:, 1], 0)[-6:]
     top4 = lines_scored[indices_of_top4][:, 0]
     return top4
+
+
+def get_top_lines_2(lines, laplaced, method):
+    lines_limited = [limit_line_to_relevant_edges(line,50) for line in lines]
+    lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
+                            dtype=object)
+    indices_of_descending_values = lines_scored[:, -1].argsort()[::-1]
+    lines_sorted_descending = lines_scored[indices_of_descending_values][:, 0]
+    top4 = []
+    for line in lines_sorted_descending:
+        if line.size<=1:
+            continue
+        if is_line_unique(line, top4):
+            top4.append(line)
+            if len(top4) == 4:
+                break
+    if len(top4)<4:
+        print("didnt find 4 lines")
+
+    return np.array(top4,dtype=object)
+
+
+def is_line_unique(line, lines, max_distance=6):
+    r, theta = cart_to_polar(line)
+    for existing_line in lines:
+        r2, theta2 = cart_to_polar(existing_line)
+        if round(theta, 3) == round(theta2, 3) and abs(r - r2) < max_distance:
+            return False
+    return True
+
+
+def cart_to_polar(line):
+    x1, y1 = line[0][:2]
+    x2, y2 = line[-1][:2]
+    if x1 == x2:
+        theta = 0
+        r = x1
+    else:
+        m = (y2 - y1) / (x2 - x1)
+        coefs = [m, y1 - m * x1]
+        # coefs = np.polyfit([x1, x2], [y1, y2], 1)
+        r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+        theta = int(np.arctan(coefs[0]) * 180 / np.pi)
+    return [r, theta]
 
 
 def draw_all_lines(img, lines):
@@ -450,4 +497,6 @@ def plot_images(images, titles):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
+    # plt.savefig('plots/' + str(datetime.today()).split('.')[0].replace(':', '-') + '.png')
+    plt.savefig('plots/' + str(datetime.today()).replace('.', '-').replace(':', '-') + '.png')
     plt.show()
