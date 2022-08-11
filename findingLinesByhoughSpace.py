@@ -1,3 +1,5 @@
+import numpy as np
+
 from helpFunctions import *
 
 
@@ -10,7 +12,7 @@ from helpFunctions import *
 def continue_hough_space(images):
     # lines=helpFunctions.findMaxValuedLines(hough_space,2)
     # print(lines)
-    titles = ['original image', 'gray', 'laplaced', 'filtered', 'masked', 'hough space']
+    titles = ['original image', 'gray', 'laplaced', 'masked', 'hough space']
     # images = [img, gray, laplaced, filtered, masked, hough_space]
     for i in range(len(images)):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
@@ -30,12 +32,23 @@ def continue_hough_space(images):
 #        plt.xticks([]), plt.yticks([])
 #    plt.show()
 
-def main(image ,laplaced,hough_space):
+def main2(image, laplacians, hough_spaces):
+    drawn_images = np.zeros(hough_spaces.shape, dtype=object)
+    scoring_methods = [score_by_density, score_by_gradients_quality]
+    for i in range(len(laplacians)):
+        for j in range(len(hough_spaces[i])):
+            lines = find_max_valued_lines(hough_spaces[i][j], laplacians[i], 20)
+            drawn_images[i][j] = np.array([np.ndarray.copy(image) for i in range(len(scoring_methods))], dtype=object)
+            for k in range(len(scoring_methods)):
+                top_lines = get_top_lines(lines, laplacians[i], scoring_methods[k])
+                draw_all_lines(drawn_images[i][j][k], top_lines)
+    plottings = np.array([np.flatten(np.array([image, laplacians[i], drawn_images[i]], dtype=object)) for i in range(len(laplacians))], dtype=object)
+    plot_images(plottings[0], ['original', 'laplaces (normal)', 'O(n^2) by density', 'O(n^2) by quality', 'O(n) by density', 'O(n) by quality'])
+    plot_images(plottings[1], ['original', 'laplaces (with abs)', 'O(n^2) by density', 'O(n^2) by quality', 'O(n) by density', 'O(n) by quality'])
+
+
+def main(image, laplaced, hough_space):
     titles = ['original image', 'hough_space', 'laplaced']
-    #this is neccesery beacuse we didnt save the filtered laplace in
-    with open("laplaced.txt") as textFile:
-        laplaced = [line.split() for line in textFile]
-    laplaced = np.array(laplaced, dtype=int)
     images = [image, hough_space, laplaced]
     for i in range(len(images)):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
@@ -43,7 +56,7 @@ def main(image ,laplaced,hough_space):
         plt.xticks([]), plt.yticks([])
     plt.show()
     lines = find_max_valued_lines(hough_space, laplaced, 20)
-    lines_scored = np.array([[line, score_by_gradients_quality(line)] for line in lines], dtype=object)
+    lines_scored = np.array([[line, score_by_density(line, laplaced)] for line in lines], dtype=object)
     indices_of_top4 = np.argpartition(lines_scored[:, 1], 0)[-6:]
     top4 = lines_scored[indices_of_top4][:, 0]
     draw_all_lines(image, top4)
@@ -53,7 +66,7 @@ if __name__ == '__main__':
     with open("hough_space.txt") as textFile:
         hough_space = [line.split() for line in textFile]
     hough_space = np.array(hough_space, dtype=int)
-    imgAddress = "images/imagesForTesting/988Cropped.jpg"
+    imgAddress = "01563.png"
     img = cv2.imread(imgAddress)
     with open("laplaced.txt") as textFile:
         laplaced = [line.split() for line in textFile]

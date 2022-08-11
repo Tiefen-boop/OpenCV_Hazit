@@ -10,6 +10,14 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
+def get_first_threshold(gradient):
+    return 100
+
+
+def get_second_threshold(gradient):
+    return 0
+
+
 def lines_to_map(lines):
     cleaned = [[line[0][0], round(line[0][1], 3)] for line in lines]
     thetas = [theta for r, theta in cleaned]
@@ -152,17 +160,11 @@ def mat_to_vector_of_relevant_points_1(gradient, threshold=0):
 def mat_to_vector_of_relevant_points_2(gradient, threshold=0):
     points = np.array([[x, y] for y, x in itertools.product(range(len(gradient)), range(len(gradient[0]))) if
                        gradient[y][x] > threshold], dtype=int)
-
-    filter_func = lambda x: x if x > threshold else 0
-    # filter_func(gradient)
-    gradient = [[filter_func(x) for x in sublist] for sublist in gradient]
-
-    np.savetxt('laplaced.txt', gradient, fmt='%.0f')
     return points  # np.ndarray.flatten(points)
 
 
-def compute_hough_space_1_optimized(gradient):
-    points = mat_to_vector_of_relevant_points_2(gradient, 180)
+def compute_hough_space_1_optimized(gradient, save_to=None, at_index=None):
+    points = mat_to_vector_of_relevant_points_2(gradient, get_first_threshold(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -188,11 +190,13 @@ def compute_hough_space_1_optimized(gradient):
             theta = (theta + 180) % 360  # rotate theta
             hough_space[r][theta] = hough_space[r][theta] + 1
     hough_space = hough_space  # * 255 / hough_space.max()
+    if save_to is not None:
+        save_to[at_index] = hough_space
     return hough_space
 
 
-def compute_hough_space_1_optimized2(gradient):
-    points = mat_to_vector_of_relevant_points_2(gradient, 50)
+def compute_hough_space_1_optimized2(gradient, save_to=None, at_index=None):
+    points = mat_to_vector_of_relevant_points_2(gradient, get_first_threshold(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -217,11 +221,13 @@ def compute_hough_space_1_optimized2(gradient):
         theta = (theta + 180) % 360  # rotate theta
         hough_space[r][theta] = hough_space[r][theta] + (gradient[y1][x1] + gradient[y2][x2])
     hough_space = hough_space  # * 255 / hough_space.max()
+    if save_to is not None:
+        save_to[at_index] = hough_space
     return hough_space
 
 
-def compute_hough_space_2(gradient):
-    points = mat_to_vector_of_relevant_points_2(gradient, 0)
+def compute_hough_space_2(gradient, save_to=None, at_index=None):
+    points = mat_to_vector_of_relevant_points_2(gradient, get_first_threshold(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -234,6 +240,8 @@ def compute_hough_space_2(gradient):
             r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
             hough_space[r][theta] = hough_space[r][theta] + 1  # + gradient[y][x]
     hough_space = hough_space  # * 255 / hough_space.max()
+    if save_to is not None:
+        save_to[at_index] = hough_space
     return hough_space
 
 
@@ -371,7 +379,7 @@ def find_line_two_ver(matrix, coordinate):
 def find_max_valued_lines(hough_space, laplaced, amount_of_lines=20):
     lines = [create_line_iterator(find_line_two_ver(laplaced, coordinate), laplaced)
              for coordinate in find_coordinates_of_max_values(hough_space, amount_of_lines)]
-    lines = limit_lines_to_relevant_edges(lines)
+    # lines = limit_lines_to_relevant_edges(lines)
     return lines
 
 
@@ -395,6 +403,28 @@ def limit_lines_to_relevant_edges(lines, threshold=1):
     return lines
 
 
+def limit_line_to_relevant_edges(line, threshold=1):
+    startInd = len(line)
+    for pointInd in range(len(line)):
+        if line[pointInd][2] >= threshold:
+            startInd = pointInd
+            break
+    limited_line = line[startInd:]
+    for pointInd in range(len(line) - 1, 0, -1):
+        if line[pointInd][2] >= threshold:
+            limited_line = limited_line[0:pointInd]
+            break
+    return limited_line
+
+
+def get_top_lines(lines, laplaced, method):
+    lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
+    lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))], dtype=object)
+    indices_of_top4 = np.argpartition(lines_scored[:, 1], 0)[-6:]
+    top4 = lines_scored[indices_of_top4][:, 0]
+    return top4
+
+
 def draw_all_lines(img, lines):
     for line in lines:
         if line.size == 0:
@@ -403,22 +433,21 @@ def draw_all_lines(img, lines):
         p2 = line[-1]
         cv2.line(img, (round(p1[0]), round(p1[1])), (round(p2[0]), round(p2[1])), (0, 0, 255), 2)
 
-    titles = ['original image']
-    images = [img]
+
+def score_by_gradients_quality(line, gradient):
+    threshold = get_second_threshold(gradient)
+    return np.sum(list(filter(lambda x: x >= threshold, line[:, 2]))) / line.size if line.size > 0 else -1
+
+
+# calculates the amount of values in the line that <=threshold
+def score_by_density(line, gradient):
+    threshold = get_second_threshold(gradient)
+    return np.count_nonzero(line[:, 2] <= threshold) * -1 / line.size if line.size > 0 else -1000000000
+
+
+def plot_images(images, titles):
     for i in range(len(images)):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
     plt.show()
-
-
-def score_by_gradients_quality(line, threshold=0):
-    return np.sum(list(filter(lambda x: x >= threshold, line[:, 2]))) / line.size if line.size > 0 else -1
-
-
-# calculates the amount of values in the line that <=threshold
-def score_by_density(line, threshold=0):
-    return np.count_nonzero(line[:, 2] <= threshold) * -1 / line.size if line.size > 0 else -1000000000
-
-
-
