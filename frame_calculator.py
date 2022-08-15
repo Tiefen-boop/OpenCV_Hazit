@@ -43,8 +43,8 @@ def main(argv):
     kernel_size = 3
     window_name = "laplace demo"
     laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
-    laplacians = [laplaced, np.abs(laplaced)]
-    #laplacians = [laplaced, laplaced]
+    #laplacians = [laplaced, np.abs(laplaced)]
+    laplacians = [laplaced, laplaced]
     # continue_hough_space([laplaced])
 
     # mask
@@ -65,14 +65,14 @@ def main(argv):
     for thread in np.ndarray.flatten(threads):
         thread.join()
 
-    # np.savetxt('laplaced.txt', laplaced, fmt='%.0f')
-    # np.savetxt('hough_space.txt', hough_space, fmt='%.0f')
+    np.savetxt('laplaced.txt', laplaced, fmt='%.0f')
+    np.savetxt('hough_space.txt', hough_spaces[0][0], fmt='%.0f')
     # images = [image, gray, laplaced, masked, hough_space]
     # continue_hough_space(images)
     # findingLinesByhoughSpace.main(image, laplaced, hough_space)
     hough_spaces.shape = (len(laplacians), len(computation_methods))
     findingLinesByhoughSpace.main2(image, laplacians, hough_spaces)
-
+    np.savetxt('hough_space.txt', hough_spaces[0][0], fmt='%.0f')
 
 if __name__ == "__main__":
     main(sys.argv[1:])

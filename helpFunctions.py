@@ -429,23 +429,23 @@ def get_top_lines(lines, laplaced, method):
 
 
 def get_top_lines_2(lines, laplaced, method):
-    lines_limited = [limit_line_to_relevant_edges(line,50) for line in lines]
+    lines_limited = [limit_line_to_relevant_edges(line, 50) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
                             dtype=object)
     indices_of_descending_values = lines_scored[:, -1].argsort()[::-1]
     lines_sorted_descending = lines_scored[indices_of_descending_values][:, 0]
     top4 = []
     for line in lines_sorted_descending:
-        if line.size<=1:
+        if line.size <= 1:
             continue
         if is_line_unique(line, top4):
             top4.append(line)
             if len(top4) == 4:
                 break
-    if len(top4)<4:
+    if len(top4) < 4:
         print("didnt find 4 lines")
 
-    return np.array(top4,dtype=object)
+    return np.array(top4, dtype=object)
 
 
 def is_line_unique(line, lines, max_distance=6):
@@ -491,16 +491,38 @@ def score_by_density(line, gradient):
     threshold = get_second_threshold(gradient)
     return np.count_nonzero(line[:, 2] <= threshold) * -1 / line.size if line.size > 0 else -1000000000
 
+
 def score_by_frequency(line, gradient):
     threshold = get_second_threshold(gradient)
     score = 0
     points = 0
-    for val in line[:,2]:
+    for val in line[:, 2]:
         if (val > threshold):
             points = 0
         else:
             points -= 1
             score += points
+    return score / line.size if line.size > 0 else -1000000000
+
+
+def score_by_frequency2(line, gradient):
+    threshold = get_second_threshold(gradient)
+    score = 0
+    current_sequence_size = 0
+    for val in line[:, 2]:
+        if (val > threshold):
+            if current_sequence_size > 0:
+                if current_sequence_size % 2 == 0:
+                    sum_of_seq = (current_sequence_size / 2 * (1 + current_sequence_size / 2))  # n*(a1+an)/2. when
+                    # n=current_sequence_size/2, a1=1, an=current_sequence_size/2.
+                    # notice we don't divide by 2 because look at the sum of 1,2,3,3,2,1
+                else:
+                    sum_of_seq = current_sequence_size / 2 * (
+                            1 + current_sequence_size / 2) + current_sequence_size / 2 + 1
+                score -= sum_of_seq
+                current_sequence_size = 0
+        else:
+            current_sequence_size += 1
     return score / line.size if line.size > 0 else -1000000000
 
 
@@ -512,3 +534,24 @@ def plot_images(images, titles):
     # plt.savefig('plots/' + str(datetime.today()).split('.')[0].replace(':', '-') + '.png')
     plt.savefig('plots/' + str(datetime.today()).replace('.', '-').replace(':', '-') + '.png')
     plt.show()
+
+
+def cut_to_intersection(lines):
+    for first_line_index in range(len(lines)):
+        line = lines[first_line_index]
+        for second_line_index in range(first_line_index + 1, len(lines)):
+            line2 = lines[second_line_index]
+            # intersectionValues=np.intersect1d(line,line2)
+            lineSet = set([tuple(x) for x in line])
+            line2Set = set([tuple(x) for x in line2])
+            intersectionValues = np.array([x for x in lineSet & line2Set])
+
+            # intersectionIndex=np.nonzero(np.in1d(line,line2))[0]
+            # intersectionIndex=np.array(filter(lambda x: x in intersectionValues, line),dtype=int)
+
+            if intersectionValues.size > 0:
+                intersectionIndex = np.where(line == intersectionValues[0])
+                print(intersectionIndex)
+                print(line[intersectionIndex])
+
+    return lines

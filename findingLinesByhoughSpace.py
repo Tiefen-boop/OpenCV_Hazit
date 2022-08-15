@@ -36,13 +36,14 @@ def continue_hough_space(images):
 
 def main2(image, laplacians, hough_spaces):
     drawn_images = np.zeros(hough_spaces.shape, dtype=object)
-    scoring_methods = [score_by_density, score_by_gradients_quality]
+    scoring_methods = [score_by_frequency2, score_by_frequency]
     for i in range(len(laplacians)):
         for j in range(len(hough_spaces[i])):
             lines = find_max_valued_lines(hough_spaces[i][j], laplacians[i], 20)
             drawn_images[i][j] = [copy.deepcopy(image) for i in range(len(scoring_methods))]
             for k in range(len(scoring_methods)):
                 top_lines = get_top_lines_2(lines, laplacians[i], scoring_methods[k])
+                #top_lines_cut_to_intersection = cut_to_intersection(top_lines)
                 draw_all_lines(drawn_images[i][j][k], top_lines)
     plottings = [[image, laplacians[i],  drawn_images[i][0][0], drawn_images[i][0][1], drawn_images[i][1][0], drawn_images[i][1][1]] for i in range(len(laplacians))]
     plot_images(plottings[0], ['original', 'laplaces (normal)', 'O(n^2) by density', 'O(n^2) by quality', 'O(n) by density', 'O(n) by quality'])
@@ -60,8 +61,17 @@ def main(image, laplaced, hough_space):
     lines = find_max_valued_lines(hough_space, laplaced, 20)
     lines_scored = np.array([[line, score_by_density(line, laplaced)] for line in lines], dtype=object)
     indices_of_top4 = np.argpartition(lines_scored[:, 1], 0)[-6:]
-    top4 = lines_scored[indices_of_top4][:, 0]
+    top4 = get_top_lines_2(lines, laplaced, score_by_frequency)
+    #cut_to_intersection(top4)
     draw_all_lines(image, top4)
+    titles = ['drawn image', 'hough_space', 'laplaced']
+    images = [image, hough_space, laplaced]
+    for i in range(len(images)):
+        plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
+        plt.title(titles[i])
+        plt.xticks([]), plt.yticks([])
+    plt.show()
+
 
 
 if __name__ == '__main__':
