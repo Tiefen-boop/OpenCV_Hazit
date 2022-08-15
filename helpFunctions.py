@@ -491,6 +491,18 @@ def score_by_density(line, gradient):
     threshold = get_second_threshold(gradient)
     return np.count_nonzero(line[:, 2] <= threshold) * -1 / line.size if line.size > 0 else -1000000000
 
+def score_by_frequency(line, gradient):
+    threshold = get_second_threshold(gradient)
+    score = 0
+    points = 0
+    for val in line[:,2]:
+        if (val > threshold):
+            points = 0
+        else:
+            points -= 1
+            score += points
+    return score / line.size if line.size > 0 else -1000000000
+
 
 def plot_images(images, titles):
     for i in range(len(images)):
