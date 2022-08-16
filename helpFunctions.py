@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import itertools
 import time, random
-from atpbar import atpbar
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
