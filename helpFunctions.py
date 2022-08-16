@@ -474,6 +474,7 @@ def cart_to_polar(line):
 
 def draw_all_lines(img, lines):
     for line in lines:
+        # line=np.array(line)
         if line.size == 0:
             continue
         p1 = line[0]
@@ -510,7 +511,7 @@ def score_by_frequency2(line, gradient):
     score = 0
     current_sequence_size = 0
     for val in line[:, 2]:
-        if (val > threshold):
+        if val > threshold:
             if current_sequence_size > 0:
                 if current_sequence_size % 2 == 0:
                     sum_of_seq = (current_sequence_size / 2 * (1 + current_sequence_size / 2))  # n*(a1+an)/2. when
@@ -538,10 +539,11 @@ def plot_images(images, titles):
 
 def cut_to_intersection(lines):
     edged_lines = []
+    edges = [[] for i in range(len(lines))]
     for first_line_index in range(len(lines)):
         line = lines[first_line_index]
 
-        intersectionIndexs = []
+        intersection_indexs = []
         for second_line_index in range(first_line_index + 1, len(lines)):
             line2 = lines[second_line_index]
             # intersectionValues=np.intersect1d(line,line2)
@@ -553,23 +555,34 @@ def cut_to_intersection(lines):
             # intersectionIndex=np.array(filter(lambda x: x in intersectionValues, line),dtype=int)
 
             if intersectionValues.size > 0:
-                intersection_index = find_index_of_array_value_in_array(line, intersectionValues[0])
+                intersection_index_line1 = find_index_of_array_value_in_array(line, intersectionValues[0])
                 # intersectionIndexs.append(find_index_of_array_value_in_array(line, intersectionValues))
                 # intersectionIndex = np.where(line[0] == intersectionValues[0][0] & line[1] == intersectionValues[
                 # 0][1])
-                intersectionIndexs.append(intersection_index)
-                print(intersection_index)
-        if len(intersectionIndexs) == 2:
-            min_intersection_index = min(intersectionIndexs)
-            max_intersection_index = max(intersectionIndexs)
-            # lines[first_line_index]=line[min_intersection_index:max_intersection_index+1]
-            # edged_lines.append(line[min_intersection_index:max_intersection_index+1])
-            edged_lines.push(np.array([line[min_intersection_index:max_intersection_index + 1]]))
-        else:
-            edged_lines.push(np.array([line]))
-            # print(line[intersectionIndex])
+                # intersection_indexs.append(intersection_index)
+                edges[first_line_index].append(intersection_index_line1)
+                intersection_index_line2 = find_index_of_array_value_in_array(line2, intersectionValues[0])
+                edges[second_line_index].append(intersection_index_line2)
 
-    return np.array(edged_lines)
+        #
+        # if len(intersection_indexs) == 2:
+        #     edges[first_line_index].append(intersection_indexs)
+
+            # min_intersection_index = min(intersection_indexs)
+            # max_intersection_index = max(intersection_indexs)
+            # edged_lines.append(np.array(line[min_intersection_index:max_intersection_index + 1]))
+
+
+        # else:
+        #     if not edges[first_line_index]:
+        #         edges[first_line_index].append([0, line.size-2])
+
+            # edged_lines.append(np.array(line))
+    for i in range(len(edges)):
+        if not edges[i]:
+            edges[i].append([0, lines[i].size-2])
+    #return np.array(edged_lines)
+    return np.array([edged_line(lines[i], edges[i]) for i in range(len(edged_lines))])
 
 
 def find_index_of_array_value_in_array(array, value):
@@ -577,3 +590,10 @@ def find_index_of_array_value_in_array(array, value):
         if np.array_equal(array[i], value):
             return i
     return -1
+
+
+def edged_line(line, edges):  # edges is an array of 2 indices
+    flat_list = [item for sublist in edges for item in sublist]
+    min_intersection_index = min(flat_list)
+    max_intersection_index = max(flat_list)
+    return np.array(line[min_intersection_index:max_intersection_index+1])
