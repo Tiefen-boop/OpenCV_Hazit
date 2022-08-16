@@ -69,9 +69,40 @@ def find_index_of_array_value_in_array(array, value):
             return i
     return -1
 
+def cut_to_intersection(lines):
+    edges = [[] for i in range(len(lines))]
+    for first_line_index in range(len(lines)):
+        line = lines[first_line_index]
+
+        intersection_indexs = []
+        for second_line_index in range(first_line_index + 1, len(lines)):
+            line2 = lines[second_line_index]
+
+            lineSet = set([tuple(x) for x in line])
+            line2Set = set([tuple(x) for x in line2])
+            intersectionValues = np.array([x for x in lineSet & line2Set])
+
+            if intersectionValues.size > 0:
+                intersection_index_line1 = find_index_of_array_value_in_array(line, intersectionValues[0])
+
+                edges[first_line_index].append(intersection_index_line1)
+                intersection_index_line2 = find_index_of_array_value_in_array(line2, intersectionValues[0])
+                edges[second_line_index].append(intersection_index_line2)
+
+
+    for i in range(len(edges)):
+        if not edges[i]:
+            edges[i].append(0)
+            edges[i].append(lines[i].size-2)
+
+    return np.array([edged_line(lines[i], edges[i]) for i in range(len(lines))],dtype=object)
+
+
 
 def edged_line(line, edges):  # edges is an array of 2 indices
-    flat_list = [item for sublist in edges for item in sublist]
-    min_intersection_index = min(flat_list)
-    max_intersection_index = max(flat_list)
-    return np.array(line[min_intersection_index:max_intersection_index + 1])
+    #flat_list = [item for sublist in edges for item in sublist]
+    min_intersection_index = min(edges)
+    max_intersection_index = max(edges)
+    if min_intersection_index == max_intersection_index:
+        return line
+    return np.array(line[min_intersection_index:max_intersection_index+1])

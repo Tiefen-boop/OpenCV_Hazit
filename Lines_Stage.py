@@ -3,6 +3,8 @@ import copy
 import cv2
 import numpy as np
 
+from helpFunctions import cut_to_intersection
+
 
 def get_threshold(gradient):
     return 0
@@ -227,7 +229,11 @@ def cart_to_polar(line):
         coefs = [m, y1 - m * x1]
         # coefs = np.polyfit([x1, x2], [y1, y2], 1)
         r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
-        theta = int(np.arctan(coefs[0]) * 180 / np.pi)
+        alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
+        if coefs[1] < 0:
+            theta = - (90 - alpha)
+        else:
+            theta = 90 + alpha
     return [r, theta]
 
 
@@ -249,7 +255,7 @@ def get_top_lines(lines, laplaced, method):
     return top4
 
 
-def get_top_lines_2(lines, laplaced, method):
+def get_top_lines_2(lines, laplaced, method,amount_of_lines=4):
     lines_limited = [limit_line_to_relevant_edges(line, 50) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
                             dtype=object)
@@ -261,10 +267,10 @@ def get_top_lines_2(lines, laplaced, method):
             continue
         if is_line_unique(line, top4):
             top4.append(line)
-            if len(top4) == 4:
+            if len(top4) == amount_of_lines:
                 break
-    if len(top4) < 4:
-        print("didnt find 4 lines")
+    if len(top4) < amount_of_lines:
+        print("didnt find "+str(amount_of_lines)+ " lines")
 
     return np.array(top4, dtype=object)
 
@@ -273,7 +279,9 @@ def get_top_lines_2(lines, laplaced, method):
 # returns the intersections of the lines + a copy of the image with the lines plotted on
 def main(image, gradient, hough_space, scoring_method):
     lines = find_max_valued_lines(hough_space, gradient)
-    top_lines = get_top_lines_2(lines, gradient, scoring_method)
+    top_lines = get_top_lines_2(lines, gradient, scoring_method, amount_of_lines=4)
+    top_lines = cut_to_intersection(top_lines)
+
     drawn_image = copy.deepcopy(image)
     draw_all_lines(drawn_image, top_lines)
     return drawn_image
