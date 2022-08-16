@@ -71,8 +71,8 @@ def main(argv):
     # continue_hough_space(images)
     # findingLinesByhoughSpace.main(image, laplaced, hough_space)
     hough_spaces.shape = (len(laplacians), len(computation_methods))
-    findingLinesByhoughSpace.main2(image, laplacians, hough_spaces)
     np.savetxt('hough_space.txt', hough_spaces[0][0], fmt='%.0f')
+    findingLinesByhoughSpace.main2(image, laplacians, hough_spaces)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
