@@ -1,18 +1,46 @@
-import getopt
+import itertools
+import os
+import shutil
 import sys
+import getopt
 import threading
-
 import numpy as np
+import cv2
+import Gradient_Stage
+import Hough_Space_Stage
+import Lines_Stage
+import helpFunctions
 
-import findingLinesByhoughSpace
-from findingLinesByhoughSpace import continue_hough_space
-from helpFunctions import *
+
+def thread_main(image, mask, gradient_computation_method, hough_space_computation_method):
+    # moving to correct working directory (and cleaning it)
+    grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
+    os.makedirs(grad_dir, exist_ok=True)
+    space_dir = grad_dir + "/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    if os.path.exists(space_dir):  # optional
+        shutil.rmtree(space_dir)   # optional
+    os.makedirs(space_dir)
+
+    # performing computations
+    gradient = Gradient_Stage.main(gradient_computation_method, image, mask)
+    hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient)
+    # saving computed data for future runs
+    np.savetxt(space_dir + '/gradient.txt', gradient, fmt='%.0f')
+    np.savetxt(space_dir + '/hough_space.txt', hough_space, fmt='%.0f')
+    cv2.imwrite(space_dir + '/gradient.png', gradient)
+    cv2.imwrite(space_dir + '/hough_space.png', hough_space)
+    images = [image, gradient]
+    titles = ["Original", "Gradient"]
+    for method in Lines_Stage.ALL_METHODS:
+        images.append(Lines_Stage.main(image, gradient, hough_space, method))
+        titles.append(Lines_Stage.METHOD_TO_NAME[method])
+    helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir)
 
 
 def main(argv):
-    image_found = False
+    image_addr = None
     image = None
-    mask_found = False
+    mask_addr = None
     mask = None
     try:
         opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask="])
@@ -25,54 +53,35 @@ def main(argv):
                 print('test.py -i <input_image> [-m <input_mask>]')
                 sys.exit()
             case "-i" | "--image":
-                image_found = True
                 image = cv2.imread(arg)
+                image_addr = arg
             case "-m" | "--mask":
-                mask_found = True
                 mask = cv2.imread(arg)
                 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    if not image_found:
+                mask_addr = arg
+    if image is None:
         print('no image: test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
-    # image
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
-    # laplacian
-    ddepth = cv2.CV_64F
-    kernel_size = 3
-    window_name = "laplace demo"
-    laplaced = cv2.Laplacian(gray, ddepth, ksize=kernel_size)  # a matrix
-    #laplacians = [laplaced, np.abs(laplaced)]
-    laplacians = [laplaced, laplaced]
-    # continue_hough_space([laplaced])
+    image_dir = "Computation_For_" + image_addr.split('/')[-1]
+    if mask is not None:
+        image_dir = image_dir + "_Given_mask_" + mask_addr.split('/')[-1]
+    os.makedirs(image_dir, exist_ok=True)
+    os.chdir(image_dir)
 
-    # mask
-    masked = laplacians
-    if mask_found:
-        masked = [apply_mask(laplaced, mask) for laplaced in laplacians]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient]
+    space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
+                                 Hough_Space_Stage.compute_hough_space_2]
 
-    # hough space computation
-    computation_methods = [compute_hough_space_1_optimized, compute_hough_space_2]
-    threads = np.array([None] * (len(masked) * len(computation_methods)), dtype=object)
-    hough_spaces = np.ndarray.copy(threads)
-    for i in range(len(masked)):
-        for j in range(len(computation_methods)):
-            index = ((i*len(masked)) + j)
-            threads[index] = threading.Thread(target=computation_methods[j],
-                                              args=(masked[i], hough_spaces, index))
-            threads[index].start()
-    for thread in np.ndarray.flatten(threads):
+    threads = []
+    for grad_method, space_method in itertools.product(gradient_computation_methods, space_computation_methods):
+        thread = threading.Thread(target=thread_main, args=(image, mask, grad_method, space_method))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
         thread.join()
 
-    np.savetxt('laplaced.txt', laplaced, fmt='%.0f')
-    np.savetxt('hough_space.txt', hough_spaces[0][0], fmt='%.0f')
-    # images = [image, gray, laplaced, masked, hough_space]
-    # continue_hough_space(images)
-    # findingLinesByhoughSpace.main(image, laplaced, hough_space)
-    hough_spaces.shape = (len(laplacians), len(computation_methods))
-    np.savetxt('hough_space.txt', hough_spaces[0][0], fmt='%.0f')
-    findingLinesByhoughSpace.main2(image, laplacians, hough_spaces)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

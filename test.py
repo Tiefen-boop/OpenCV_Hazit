@@ -1,7 +1,7 @@
-import numpy as np
+import shutil
 
-import helpFunctions
+import test_helper
+import os
 
-line = np.array([1, 2, 3, 1, 1, 0])
-line.shape = (2,3)
-print(line)
+
+os.chdir("testest")
