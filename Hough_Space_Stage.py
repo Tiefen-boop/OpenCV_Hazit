@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 
 def get_threshold(gradient=None):
-    return 20
+    return 10
 
 
 def mat_to_vector_of_relevant_points(gradient, threshold=0):
@@ -78,13 +78,14 @@ def compute_hough_space_2(gradient):
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
-    theta_max = 180
-    hough_space = np.zeros((2 * r_max, theta_max))
+    theta_max = 360
+    hough_space = np.zeros((r_max, theta_max))
     for p in tqdm(points):
         x, y = p
-        for theta in range(0, 179):
+        for theta in range(-89, 179):
             theta_rad = theta * np.pi / 180
-            r = int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) + r_max
+            r = np.abs(int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) )
+            theta = (theta + 180) % 360  # rotate theta
             hough_space[r][theta] = hough_space[r][theta] + 1  # + gradient[y][x]
     hough_space = hough_space  # * 255 / hough_space.max()
     return hough_space

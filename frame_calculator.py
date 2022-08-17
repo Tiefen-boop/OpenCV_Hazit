@@ -75,7 +75,8 @@ def main(argv):
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
-    space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
+    # space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
+    # space_computation_methods = [Hough_Space_Stage.compute_hough_space_2]
 
     threads = []
     for grad_method, space_method in itertools.product(gradient_computation_methods, space_computation_methods):
