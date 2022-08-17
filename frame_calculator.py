@@ -23,6 +23,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
 
     # performing computations
     gradient = Gradient_Stage.main(gradient_computation_method, image, mask)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient)
     # saving computed data for future runs
     np.savetxt(space_dir + '/gradient.txt', gradient, fmt='%.0f')
