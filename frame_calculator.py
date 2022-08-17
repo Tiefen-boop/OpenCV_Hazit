@@ -16,7 +16,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
     os.makedirs(grad_dir, exist_ok=True)
-    space_dir = grad_dir + "/" +"threshold_" + str(Hough_Space_Stage.get_threshold())+"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    space_dir = grad_dir + "/" + "threshold_" + str(Hough_Space_Stage.get_threshold())+"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     if os.path.exists(space_dir):  # optional
         shutil.rmtree(space_dir)   # optional
     os.makedirs(space_dir)

@@ -86,7 +86,7 @@ def create_line_iterator(points, img):
     # Get intensities from img ndarray
     itbuffer[:, 2] = img[itbuffer[:, 1].astype(np.uint), itbuffer[:, 0].astype(np.uint)]
 
-    return itbuffer
+    return itbuffer.astype(int)
 
 
 def find_coordinates_of_max_values(matrix, amount_of_values):
@@ -122,7 +122,7 @@ def find_line_two_ver(matrix, coordinate):
     m = np.tan(alpha * np.pi / 180)
     b = y - m * x
 
-    if math.isinf(b/m):
+    if math.isinf(b / m):
         return []
     # y=mx+b
     if 0 < theta < 90:
@@ -255,6 +255,76 @@ def is_line_unique(line, lines, max_distance=6):
     return True
 
 
+def is_line_unique_by_alpha(line, lines, max_diff_alpha=6):
+    pass  # TODO implement this method
+
+
+def line_to_linear_equation_function(line):
+    x1, y1 = line[0][:2]
+    x2, y2 = line[-1][:2]
+    if x1 == x2:
+        return lambda x: x1
+    else:
+        m = (y2 - y1) / (x2 - x1)
+        return lambda x: m * x + y1 - m * x1
+
+
+"""
+this function is implemented by the claim that the average distance is  derived from integral value.
+"""
+
+
+# not correct, maybe can be modified tp: if more than N "x" values have a distance lower than max_distance,
+# then the line is not unique
+def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
+    first_line_func = line_to_linear_equation_function(line)
+    for existing_line in lines:
+        second_line_func = line_to_linear_equation_function(existing_line)
+        for x in range(line[0][0], line[-1][0]):
+            y1 = first_line_func(x)
+            y2 = second_line_func(x)
+            if abs(y1 - y2) < max_distance:
+                return False
+    return True
+
+
+def is_line_unique_by_avg_distance(line, lines, max_distance=6):
+    first_line_func = line_to_linear_equation_function(line)
+    x_start = min(line[0][0], line[-1][0])
+    x_end = max(line[0][0], line[-1][0])
+    for existing_line in lines:
+        sum_of_distances = 0
+        second_line_func = line_to_linear_equation_function(existing_line)
+        if x_start == x_end:
+            return True  # todo handle this case. its currently not handled!
+        for x in range(x_start, x_end):
+            y1 = first_line_func(x)
+            y2 = second_line_func(x)
+            sum_of_distances += abs(y1 - y2)
+        if sum_of_distances / abs(x_end - x_start) < max_distance:
+            return False
+    return True
+
+
+import sympy as sy
+
+
+def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
+    first_line_func = line_to_linear_equation_function(line)
+    x_start = min(line[0][0], line[-1][0])
+    x_end = max(line[0][0], line[-1][0])
+    for existing_line in lines:
+        second_line_func = line_to_linear_equation_function(existing_line)
+        if x_start == x_end:
+            return True  # todo handle this case. its currently not handled!
+        x = sy.Symbol('x')
+        integral_res = sy.integrate(first_line_func(x) - second_line_func(x), (x, x_start, x_end))
+        average_distance = integral_res / line.size
+        if average_distance < max_distance:
+            return False
+    return True
+
+
 def get_top_lines(lines, laplaced, method):
     lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
@@ -274,7 +344,7 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
     for line in lines_sorted_descending:
         if len(line) <= 1:
             continue
-        if is_line_unique(line, top4):
+        if is_line_unique_by_avg_distance(line, top4):
             top4.append(line)
             if len(top4) == amount_of_lines:
                 break
@@ -291,7 +361,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method):
     lock.acquire()
-    if (METHOD_TO_NAME[scoring_method] == "By Density"):
+    if (METHOD_TO_NAME[scoring_method] == "By Density"):  # todo delete this if statement
         x = 5
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     print(METHOD_TO_NAME[scoring_method])
