@@ -16,7 +16,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
     os.makedirs(grad_dir, exist_ok=True)
-    space_dir = grad_dir + "/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    space_dir = grad_dir + "/" +"threshold_" + str(Hough_Space_Stage.get_threshold())+"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     if os.path.exists(space_dir):  # optional
         shutil.rmtree(space_dir)   # optional
     os.makedirs(space_dir)
@@ -29,12 +29,15 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     np.savetxt(space_dir + '/hough_space.txt', hough_space, fmt='%.0f')
     cv2.imwrite(space_dir + '/gradient.png', gradient)
     cv2.imwrite(space_dir + '/hough_space.png', hough_space)
+    cv2.imwrite(space_dir + '/normalized_hough_space.png', hough_space * 255 / hough_space.max())
+
     images = [image, gradient]
     titles = ["Original", "Gradient"]
     for method in Lines_Stage.ALL_METHODS:
         images.append(Lines_Stage.main(image, gradient, hough_space, method))
         titles.append(Lines_Stage.METHOD_TO_NAME[method])
     helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir)
+
 
 
 def main(argv):
@@ -72,6 +75,7 @@ def main(argv):
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
+    space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
 
     threads = []
     for grad_method, space_method in itertools.product(gradient_computation_methods, space_computation_methods):

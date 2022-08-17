@@ -1,4 +1,5 @@
 import copy
+import math
 import threading
 
 import cv2
@@ -91,6 +92,7 @@ def create_line_iterator(points, img):
 def find_coordinates_of_max_values(matrix, amount_of_values):
     flatted = matrix.flatten()
     indexes = np.argpartition(flatted, -1 * amount_of_values)[-1 * amount_of_values:]
+    # indexes=np.argsort(flatted[indexes])#todo sort by value
     # topValues=flatted[indexes]
     """
         return in [x,y] format
@@ -101,7 +103,8 @@ def find_coordinates_of_max_values(matrix, amount_of_values):
 
 def find_line_two_ver(matrix, coordinate):
     r = coordinate[1]
-    theta = (coordinate[0] - 180) % 360
+    theta = (coordinate[0] - 180)
+
     theta_rad = theta * np.pi / 180
     x = r * np.cos(theta_rad)
     y = r * np.sin(theta_rad)
@@ -113,11 +116,14 @@ def find_line_two_ver(matrix, coordinate):
     if theta == 90:  # line is of the form y=const
         return [np.array([0, round(y)]), np.array([round(x_max), round(y)])]  # [p1,p2]
     if theta > 0:
-        alpha = 90 - theta
+        alpha = theta - 90
     if theta < 0:
         alpha = 90 + theta  # also equal 90-abs(theta)
-    m = np.arctan(alpha)
+    m = np.tan(alpha * np.pi / 180)
     b = y - m * x
+
+    if math.isinf(b/m):
+        return []
     # y=mx+b
     if 0 < theta < 90:
         x2 = -b / m
@@ -173,7 +179,7 @@ def score_by_frequency(line, gradient):
         else:
             points -= 1
             score += points
-    return score * line.size if line.size > 0 else -1000000000
+    return score / line.size if line.size > 0 else -1000000000
 
 
 def score_by_frequency2(line, gradient):
@@ -194,7 +200,7 @@ def score_by_frequency2(line, gradient):
                 current_sequence_size = 0
         else:
             current_sequence_size += 1
-    return score * line.size if line.size > 0 else -1000000000
+    return score / line.size if line.size > 0 else -1000000000
 
 
 def draw_all_lines(img, lines):
@@ -280,13 +286,16 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
 
 # finds - based on given gradient, hough_space, scoring_method - the best lines
 # returns the intersections of the lines + a copy of the image with the lines plotted on
-lock = threading.Lock() #todo delete this lock
+lock = threading.Lock()  # todo delete this lock
+
+
 def main(image, gradient, hough_space, scoring_method):
     lock.acquire()
-    lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=100)
+    if (METHOD_TO_NAME[scoring_method] == "By Density"):
+        x = 5
+    lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     print(METHOD_TO_NAME[scoring_method])
-    if(METHOD_TO_NAME[scoring_method] == "By Quality"):
-        x=5
+
     top_lines = get_top_lines_2(lines, gradient, scoring_method, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
 

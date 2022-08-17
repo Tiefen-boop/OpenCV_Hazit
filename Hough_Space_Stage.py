@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 
 def get_threshold(gradient=None):
-    return 50
+    return 20
 
 
 def mat_to_vector_of_relevant_points(gradient, threshold=0):

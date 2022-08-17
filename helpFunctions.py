@@ -58,7 +58,7 @@ def plot_images(images, titles, show=True, dir_to_save=None):
         plt.subplot(2, 3, i + 1), plt.imshow(images[i], 'gray', vmin=0, vmax=255)
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
-    plt.title('thresholded lalplacian with: ' + str(Hough_Space_Stage.get_threshold()))
+    # plt.suptitle('thresholded lalplacian with: ' + str(Hough_Space_Stage.get_threshold()))
     # plt.savefig('plots/' + str(datetime.today()).split('.')[0].replace(':', '-') + '.png')
     if dir_to_save is None:
         os.makedirs("plots", exist_ok=True)
