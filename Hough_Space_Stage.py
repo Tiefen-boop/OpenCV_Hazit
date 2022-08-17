@@ -4,7 +4,7 @@ import itertools
 from tqdm import tqdm
 
 
-def get_threshold(gradient):
+def get_threshold(gradient=None):
     return 50
 
 

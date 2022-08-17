@@ -1,13 +1,15 @@
 import copy
+import threading
 
 import cv2
 import numpy as np
 
-from helpFunctions import cut_to_intersection
+import helpFunctions
+from helpFunctions import cut_to_intersection, plot_images
 
 
 def get_threshold(gradient):
-    return 0
+    return 10
 
 
 def create_line_iterator(points, img):
@@ -142,6 +144,7 @@ def find_line_two_ver(matrix, coordinate):
 
 
 def find_max_valued_lines(hough_space, gradient, amount_of_lines=20):
+    # helpFunctions.plot_images([hough_space, gradient], ["Hough Space", "Gradient"])
     lines = [create_line_iterator(find_line_two_ver(gradient, coordinate), gradient)
              for coordinate in find_coordinates_of_max_values(hough_space, amount_of_lines)]
     # lines = limit_lines_to_relevant_edges(lines)
@@ -170,7 +173,7 @@ def score_by_frequency(line, gradient):
         else:
             points -= 1
             score += points
-    return score / line.size if line.size > 0 else -1000000000
+    return score * line.size if line.size > 0 else -1000000000
 
 
 def score_by_frequency2(line, gradient):
@@ -191,7 +194,7 @@ def score_by_frequency2(line, gradient):
                 current_sequence_size = 0
         else:
             current_sequence_size += 1
-    return score / line.size if line.size > 0 else -1000000000
+    return score * line.size if line.size > 0 else -1000000000
 
 
 def draw_all_lines(img, lines):
@@ -255,35 +258,41 @@ def get_top_lines(lines, laplaced, method):
     return top4
 
 
-def get_top_lines_2(lines, laplaced, method,amount_of_lines=4):
-    lines_limited = [limit_line_to_relevant_edges(line, 50) for line in lines]
+def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
+    lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
                             dtype=object)
     indices_of_descending_values = lines_scored[:, -1].argsort()[::-1]
     lines_sorted_descending = lines_scored[indices_of_descending_values][:, 0]
     top4 = []
     for line in lines_sorted_descending:
-        if line.size <= 1:
+        if len(line) <= 1:
             continue
         if is_line_unique(line, top4):
             top4.append(line)
             if len(top4) == amount_of_lines:
                 break
     if len(top4) < amount_of_lines:
-        print("didnt find "+str(amount_of_lines)+ " lines")
+        print("didnt find " + str(amount_of_lines) + " lines")
 
     return np.array(top4, dtype=object)
 
 
 # finds - based on given gradient, hough_space, scoring_method - the best lines
 # returns the intersections of the lines + a copy of the image with the lines plotted on
+lock = threading.Lock() #todo delete this lock
 def main(image, gradient, hough_space, scoring_method):
-    lines = find_max_valued_lines(hough_space, gradient)
+    lock.acquire()
+    lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=100)
+    print(METHOD_TO_NAME[scoring_method])
+    if(METHOD_TO_NAME[scoring_method] == "By Quality"):
+        x=5
     top_lines = get_top_lines_2(lines, gradient, scoring_method, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
 
     drawn_image = copy.deepcopy(image)
     draw_all_lines(drawn_image, top_lines)
+    lock.release()
     return drawn_image
 
 
