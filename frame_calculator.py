@@ -73,7 +73,7 @@ def main(argv):
     os.makedirs(image_dir, exist_ok=True)
     os.chdir(image_dir)
 
-    gradient_computation_methods = [Gradient_Stage.compute_gradient]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
