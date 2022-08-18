@@ -90,7 +90,7 @@ def create_line_iterator(points, img):
     # Get intensities from img ndarray
     itbuffer[:, 2] = img[itbuffer[:, 1].astype(np.uint), itbuffer[:, 0].astype(np.uint)]
 
-    return itbuffer
+    return itbuffer.astype(int)
 
 
 def find_coordinates_of_max_values(matrix, amount_of_values):
