@@ -83,7 +83,7 @@ def main(argv):
     os.chdir(wd)
 
     # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
-    threshold_computation_methods = [Hough_Space_Stage.get_threshold, Hough_Space_Stage.get_median_threshold]
+    threshold_computation_methods = [ Hough_Space_Stage.get_median_threshold]
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
