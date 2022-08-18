@@ -10,9 +10,39 @@ def get_threshold(gradient=None):
     return 10
 
 
-def get_median_threshold(gradient):
-    gradient = Gradient_Stage.filter_gradient(gradient, 0)
+# def get_median_threshold(gradient):
+#     gradient = Gradient_Stage.filter_gradient(gradient, 0)
+#     return threshold_by_percentile(gradient)
+
+
+def thres_1(gradient):
+
+    gradient = np.unique(gradient)
+    gradient = [x for x in gradient if x > 0]
+    print(np.median(gradient))
     return np.median(gradient)
+
+
+def thres_2(gradient):
+    gradient = [x for x in gradient if x > 0]
+    print(np.max(gradient) / 4)
+    return np.max(gradient) / 4
+
+
+def threshold_by_uniques_median_div2(gradient):
+    gradient = np.unique(gradient)
+    gradient = [x for x in gradient if x >= 0]
+    print(np.median(gradient) / 2)
+    return np.median(gradient) / 2
+
+
+def threshold_by_percentile(gradient, top_percentage=0.1):
+    gradient = gradient.flatten()
+    gradient = [x for x in gradient if x > 0]
+    index = int(len(gradient) * top_percentage)
+    threshold = np.partition(gradient, -index)[-index]
+    print(threshold)
+    return threshold
 
 
 def mat_to_vector_of_relevant_points(gradient, threshold=0):
@@ -80,7 +110,7 @@ def compute_hough_space_1_optimized2(gradient, method=get_threshold):
     return hough_space
 
 
-def compute_hough_space_2(gradient,method=get_threshold):
+def compute_hough_space_2(gradient, method=get_threshold):
     points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
@@ -111,8 +141,10 @@ METHOD_TO_NAME = {
     compute_hough_space_1_optimized2: "O(n^2)_alt",
     compute_hough_space_2: "O(n)"
 }
-ALL_GRADIANT_THRESHOLD_METHODS = [get_threshold, get_median_threshold]
+ALL_GRADIANT_THRESHOLD_METHODS = [get_threshold, threshold_by_uniques_median_div2, threshold_by_percentile]
 GRADIANT_THRESHOLD_TO_NAME = {
-    get_threshold: "threshold_"+str(get_threshold()),
-    get_median_threshold: "median_threshold"
+    get_threshold: "threshold_" + str(get_threshold()),
+    #get_median_threshold: "median_threshold"
+    threshold_by_uniques_median_div2: "median_threshold_div2",
+    threshold_by_percentile: "percentile_threshold"
 }
