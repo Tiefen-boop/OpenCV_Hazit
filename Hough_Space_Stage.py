@@ -57,7 +57,7 @@ def compute_hough_space_1_optimized2(gradient, method=get_threshold):
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
-    hough_space = np.zeros((2 * r_max, theta_max))
+    hough_space = np.zeros((r_max, theta_max))
     for p1, p2 in itertools.combinations(points, 2):
         x1, y1 = p1
         x2, y2 = p2
@@ -73,7 +73,7 @@ def compute_hough_space_1_optimized2(gradient, method=get_threshold):
             else:
                 theta = 90 + alpha
         theta_rad = theta * np.pi / 180
-        r = int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))) + r_max
+        r = np.abs(int((x1 * np.cos(theta_rad)) + (y1 * np.sin(theta_rad))))
         theta = (theta + 180) % 360  # rotate theta
         hough_space[r][theta] = hough_space[r][theta] + 1  # (gradient[y1][x1] + gradient[y2][x2])
     hough_space = hough_space  # * 255 / hough_space.max()

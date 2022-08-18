@@ -6,6 +6,8 @@ import threading
 
 import cv2
 import numpy as np
+
+import line_unique_functions
 from line_unique_functions import *
 import helpFunctions
 from helpFunctions import cut_to_intersection, plot_images
@@ -241,8 +243,6 @@ def limit_line_to_relevant_edges(line, threshold=1):
     return limited_line
 
 
-
-
 def get_top_lines(lines, laplaced, method):
     lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
@@ -279,7 +279,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    if (METHOD_TO_NAME[scoring_method] == "By Density"):  # todo delete this if statement
+    if METHOD_TO_NAME[scoring_method] == "By Density":  # todo delete this if statement
         x = 5
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     print(METHOD_TO_NAME[scoring_method])
@@ -296,28 +296,43 @@ def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is
 def standalone(argv):
     image_addr = None
     image = None
-    mask_addr = None
-    mask = None
+    gradient = None
+    hough_space = None
     try:
-        opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask="])
+        opts, args = getopt.getopt(argv, "h", ["image=", "grad=", "space="])
     except getopt.GetoptError:
         print('test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
     for opt, arg in opts:
         match opt:
             case '-h':
-                print('test.py -i <input_image> [-m <input_mask>]')
+                print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
                 sys.exit()
-            case "-i" | "--image":
+            case "--image":
                 image = cv2.imread(arg)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 image_addr = arg
-            case "-m" | "--mask":
-                mask = cv2.imread(arg)
-                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask_addr = arg
-    if image is None:
-        print('no image: test.py -i <input_image> [-m <input_mask>]')
+            case "--grad":
+                with open(arg) as textFile:
+                    gradient = [line.split() for line in textFile]
+                gradient = np.array(gradient, dtype=int)
+            case "--space":
+                with open(arg) as textFile:
+                    hough_space = [line.split() for line in textFile]
+                hough_space = np.array(hough_space, dtype=int)
+    if image is None or gradient is None or hough_space is None:
+        print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
         sys.exit(2)
+    wd = helpFunctions.build_working_dir("lines_stage_for_" + image_addr)
+    for uniqueness_method in line_unique_functions.ALL_METHODS:
+        images = [image, gradient]
+        titles = ["Original", "Gradient"]
+        for method in ALL_METHODS:
+            images.append(
+                main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+            titles.append(METHOD_TO_NAME[method])
+        helpFunctions.plot_images(images, titles, show=False,
+                                  dir_to_save=wd + "/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
 
 
 if __name__ == "__main__":
