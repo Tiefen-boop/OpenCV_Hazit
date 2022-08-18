@@ -10,7 +10,7 @@ def convert_to_gray(image):
 def calculate_gradient(grayscale_image):
     ddepth = cv2.CV_64F
     kernel_size = 3
-    return filter_gradient(cv2.Laplacian(grayscale_image, ddepth, ksize=kernel_size))
+    return cv2.Laplacian(grayscale_image, ddepth, ksize=kernel_size)
 
 
 def filter_gradient(edges, threshold=0):  # todo change to list comprehension

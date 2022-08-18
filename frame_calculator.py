@@ -13,8 +13,7 @@ import line_unique_functions
 from tqdm import tqdm
 
 
-def thread_main(image, mask, gradient_computation_method, hough_space_computation_method,
-                get_threshold_method=Hough_Space_Stage.get_threshold):
+def thread_main(image, mask, gradient_computation_method, hough_space_computation_method, get_threshold_method=Hough_Space_Stage.get_threshold):
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
 
@@ -25,7 +24,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # performing computations
     gradient = Gradient_Stage.main(gradient_computation_method, image, mask)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient)
+    hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient, get_threshold_method)
     # saving computed data for future runs
     np.savetxt(wd + '/gradient.txt', gradient, fmt='%.0f')
     np.savetxt(wd + '/hough_space.txt', hough_space, fmt='%.0f')
@@ -80,7 +79,9 @@ def main(argv):
     os.chdir(wd)
 
     # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
-    threshold_computation_methods = [Hough_Space_Stage.get_median_threshold]
+
+    threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile, Hough_Space_Stage.threshold_by_uniques_median_div2]
+
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
