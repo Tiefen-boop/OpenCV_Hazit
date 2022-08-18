@@ -265,11 +265,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    if (METHOD_TO_NAME[scoring_method] == "By Density"):  # todo delete this if statement
-        x = 5
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
-    print(METHOD_TO_NAME[scoring_method])
-
     top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
 
