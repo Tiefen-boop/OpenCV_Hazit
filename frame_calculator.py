@@ -10,6 +10,7 @@ import Gradient_Stage
 import Hough_Space_Stage
 import Lines_Stage
 import helpFunctions
+import line_unique_functions
 
 
 def thread_main(image, mask, gradient_computation_method, hough_space_computation_method,get_threshold_method=Hough_Space_Stage.get_threshold):
@@ -32,12 +33,16 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     cv2.imwrite(space_dir + '/hough_space.png', hough_space)
     cv2.imwrite(space_dir + '/normalized_hough_space.png', hough_space * 255 / hough_space.max())
 
-    images = [image, gradient]
-    titles = ["Original", "Gradient"]
-    for method in Lines_Stage.ALL_METHODS:
-        images.append(Lines_Stage.main(image, gradient, hough_space, method))
-        titles.append(Lines_Stage.METHOD_TO_NAME[method])
-    helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir)
+
+    #for each uniqueness method
+    for uniqueness_method in line_unique_functions.ALL_METHODS:
+        images = [image, gradient]
+        titles = ["Original", "Gradient"]
+        for method in Lines_Stage.ALL_METHODS:
+            images.append(Lines_Stage.main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+            titles.append(Lines_Stage.METHOD_TO_NAME[method])
+        helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir+"/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
+
 
 
 
