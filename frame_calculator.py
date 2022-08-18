@@ -1,6 +1,5 @@
 import itertools
 import os
-import shutil
 import sys
 import getopt
 import threading
@@ -22,7 +21,6 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     space_dir = Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     threshold_dir = Hough_Space_Stage.GRADIANT_THRESHOLD_TO_NAME[get_threshold_method]
     wd = helpFunctions.build_working_dir(grad_dir, space_dir, threshold_dir)
-
 
     # performing computations
     gradient = Gradient_Stage.main(gradient_computation_method, image, mask)
@@ -47,7 +45,6 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
         helpFunctions.plot_images(images, titles, show=False,
 
                                   dir_to_save=wd + "/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
-
 
 
 def main(argv):
@@ -83,7 +80,7 @@ def main(argv):
     os.chdir(wd)
 
     # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
-    threshold_computation_methods = [ Hough_Space_Stage.get_median_threshold]
+    threshold_computation_methods = [Hough_Space_Stage.get_median_threshold]
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
