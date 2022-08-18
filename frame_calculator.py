@@ -16,9 +16,10 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
     os.makedirs(grad_dir, exist_ok=True)
-    space_dir = grad_dir + "/" +"threshold_" + str(Hough_Space_Stage.get_threshold())+"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    space_dir = grad_dir + "/" + "threshold_" + str(Hough_Space_Stage.get_threshold()) + "/" + \
+                Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     if os.path.exists(space_dir):  # optional
-        shutil.rmtree(space_dir)   # optional
+        shutil.rmtree(space_dir)  # optional
     os.makedirs(space_dir)
 
     # performing computations
@@ -38,7 +39,6 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
         images.append(Lines_Stage.main(image, gradient, hough_space, method))
         titles.append(Lines_Stage.METHOD_TO_NAME[method])
     helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir)
-
 
 
 def main(argv):
@@ -70,8 +70,8 @@ def main(argv):
     image_dir = "Computation_For_" + image_addr.split('/')[-1]
     if mask is not None:
         image_dir = image_dir + "_Given_mask_" + mask_addr.split('/')[-1]
-    os.makedirs(image_dir, exist_ok=True)
-    os.chdir(image_dir)
+    wd = helpFunctions.build_working_dir(image_dir, exist_ok=True)
+    os.chdir(wd)
 
     gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,

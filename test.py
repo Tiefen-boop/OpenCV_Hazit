@@ -1,7 +1,3 @@
-import shutil
+import helpFunctions
 
-import test_helper
-import os
-
-
-os.chdir("testest")
+helpFunctions.build_working_dir("this", "is", "sparta")

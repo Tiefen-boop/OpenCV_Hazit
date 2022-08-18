@@ -1,5 +1,7 @@
 import copy
+import getopt
 import math
+import sys
 import threading
 
 import cv2
@@ -122,7 +124,7 @@ def find_line_two_ver(matrix, coordinate):
     m = np.tan(alpha * np.pi / 180)
     b = y - m * x
 
-    if math.isinf(b/m):
+    if math.isinf(b / m):
         return []
     # y=mx+b
     if 0 < theta < 90:
@@ -201,6 +203,18 @@ def score_by_frequency2(line, gradient):
         else:
             current_sequence_size += 1
     return score / line.size if line.size > 0 else -1000000000
+
+
+def score_by_gap_histogram(line, gradient):
+    threshold = get_threshold(gradient)
+    histogram = np.zeros(line[:, 2].size, dtype=int)
+    gap_size = 0
+    for val in line[:, 2]:
+        if val > threshold and gap_size > 0:
+            histogram[gap_size] += 1
+            gap_size = 0
+        else:
+            gap_size += 1
 
 
 def draw_all_lines(img, lines):
@@ -291,7 +305,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method):
     lock.acquire()
-    if (METHOD_TO_NAME[scoring_method] == "By Density"):
+    if METHOD_TO_NAME[scoring_method] == "By Density":
         x = 5
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     print(METHOD_TO_NAME[scoring_method])
@@ -304,6 +318,36 @@ def main(image, gradient, hough_space, scoring_method):
     lock.release()
     return drawn_image
 
+
+def standalone(argv):
+    image_addr = None
+    image = None
+    mask_addr = None
+    mask = None
+    try:
+        opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask="])
+    except getopt.GetoptError:
+        print('test.py -i <input_image> [-m <input_mask>]')
+        sys.exit(2)
+    for opt, arg in opts:
+        match opt:
+            case '-h':
+                print('test.py -i <input_image> [-m <input_mask>]')
+                sys.exit()
+            case "-i" | "--image":
+                image = cv2.imread(arg)
+                image_addr = arg
+            case "-m" | "--mask":
+                mask = cv2.imread(arg)
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                mask_addr = arg
+    if image is None:
+        print('no image: test.py -i <input_image> [-m <input_mask>]')
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    standalone(sys.argv[1:])
 
 # constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2]
