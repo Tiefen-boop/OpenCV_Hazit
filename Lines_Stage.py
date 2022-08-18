@@ -255,7 +255,7 @@ def is_line_unique(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_alpha(line, lines, max_diff_alpha=25,max_distance=20):
+def is_line_unique_by_alpha(line, lines, max_diff_alpha=25, max_distance=20):
     r, theta = cart_to_polar(line)
     alpha = get_alpha_by_theta(theta)
     for existing_line in lines:
@@ -265,6 +265,7 @@ def is_line_unique_by_alpha(line, lines, max_diff_alpha=25,max_distance=20):
             return False
 
     return True
+
 
 def get_alpha_by_theta(theta):
     if theta == 0:  # line is of the form X=const
@@ -276,14 +277,32 @@ def get_alpha_by_theta(theta):
     else:
         alpha = theta + 90
     return alpha
-def line_to_linear_equation_function(line):
+
+
+def line_to_linear_equation_function_x_to_fx(line):
     x1, y1 = line[0][:2]
     x2, y2 = line[-1][:2]
     if x1 == x2:
-        return lambda x: x1
+        raise Exception(
+            "Line is of the form x=const, use the function " + line_to_inverse_linear_equation_function_y_to_x.__name__)
+        # return lambda x: x1
     else:
         m = (y2 - y1) / (x2 - x1)
-        return lambda x: m * x + y1 - m * x1
+        b = y1 - m * x1
+        return lambda x: m * x + b
+
+
+def line_to_inverse_linear_equation_function_y_to_x(line):
+    y1, x1 = line[0][:2]
+    y2, x2 = line[-1][:2]
+    if x1 == x2:
+        raise Exception(
+            "Line is of the form y=const, use the function " + line_to_linear_equation_function_x_to_fx.__name__)
+        # return lambda x: x1
+    else:
+        m = (y2 - y1) / (x2 - x1)
+        b = y1 - m * x1
+        return lambda x: m * x + b
 
 
 """
@@ -294,9 +313,9 @@ this function is implemented by the claim that the average distance is  derived 
 # not correct, maybe can be modified tp: if more than N "x" values have a distance lower than max_distance,
 # then the line is not unique
 def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
-    first_line_func = line_to_linear_equation_function(line)
+    first_line_func = line_to_linear_equation_function_x_to_fx(line)
     for existing_line in lines:
-        second_line_func = line_to_linear_equation_function(existing_line)
+        second_line_func = line_to_linear_equation_function_x_to_fx(existing_line)
         for x in range(line[0][0], line[-1][0]):
             y1 = first_line_func(x)
             y2 = second_line_func(x)
@@ -306,18 +325,37 @@ def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
 
 
 def is_line_unique_by_avg_distance(line, lines, max_distance=6):
-    first_line_func = line_to_linear_equation_function(line)
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
+    inverse = False
+    if x_start == x_end:
+        first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
+        inverse = True
+    else:
+        first_line_func = line_to_linear_equation_function_x_to_fx(line)
     for existing_line in lines:
         sum_of_distances = 0
-        second_line_func = line_to_linear_equation_function(existing_line)
-        if x_start == x_end:
-            return True  # todo handle this case. its currently not handled!
-        for x in range(x_start, x_end):
-            y1 = first_line_func(x)
-            y2 = second_line_func(x)
-            sum_of_distances += abs(y1 - y2)
+        if inverse:
+            try:
+                second_line_func = line_to_inverse_linear_equation_function_y_to_x(existing_line)
+            except Exception as e:
+                continue #the lines are orthogonal, so they are unique
+        else:
+            try:
+                second_line_func = line_to_linear_equation_function_x_to_fx(existing_line)
+            except Exception as e:
+                continue #the lines are orthogonal, so they are unique
+
+        if inverse:  # line is of the form x=const
+            y_start = min(line[0][1], line[-1][1])
+            y_end = max(line[0][1], line[-1][1])
+            for y in range(y_start, y_end):
+                sum_of_distances += abs(x_start - second_line_func(y))
+        else:
+            for x in range(x_start, x_end + 1):
+                y1 = first_line_func(x)
+                y2 = second_line_func(x)
+                sum_of_distances += abs(y1 - y2)
         if sum_of_distances / abs(x_end - x_start) < max_distance:
             return False
     return True
@@ -327,16 +365,35 @@ import sympy as sy
 
 
 def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
-    first_line_func = line_to_linear_equation_function(line)
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
+    inverse = False
+    if x_start == x_end:
+        first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
+        inverse = True
+    else:
+        first_line_func = line_to_linear_equation_function_x_to_fx(line)
     for existing_line in lines:
-        second_line_func = line_to_linear_equation_function(existing_line)
-        if x_start == x_end:
-            return True  # todo handle this case. its currently not handled!
-        x = sy.Symbol('x')
-        integral_res = sy.integrate(first_line_func(x) - second_line_func(x), (x, x_start, x_end))
-        average_distance = integral_res / line.size
+        if inverse:
+            try:
+                second_line_func = line_to_inverse_linear_equation_function_y_to_x(existing_line)
+            except Exception as e:
+                continue  # the lines are orthogonal, so they are unique
+        else:
+            try:
+                second_line_func = line_to_linear_equation_function_x_to_fx(existing_line)
+            except Exception as e:
+                continue  # the lines are orthogonal, so they are unique
+        if inverse:  # line is of the form x=const
+            y_start = min(line[0][1], line[-1][1])
+            y_end = max(line[0][1], line[-1][1])
+            y=sy.Symbol('y')
+            integral_res = sy.integrate(abs(x_start - second_line_func(y)), (y, y_start, y_end))
+            average_distance = integral_res/abs(y_end-y_start)
+        else:
+            x = sy.Symbol('x')
+            integral_res = sy.integrate(first_line_func(x) - second_line_func(x), (x, x_start, x_end))
+            average_distance = integral_res / abs(x_end - x_start)
         if average_distance < max_distance:
             return False
     return True
@@ -361,7 +418,7 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
     for line in lines_sorted_descending:
         if len(line) <= 1:
             continue
-        if is_line_unique_by_alpha(line, top4):
+        if is_line_unique_by_avg_distance(line, top4):
             top4.append(line)
             if len(top4) == amount_of_lines:
                 break
