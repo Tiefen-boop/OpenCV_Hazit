@@ -308,7 +308,7 @@ def standalone(argv):
             case "--image":
                 image = cv2.imread(arg)
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                image_addr = arg
+                image_addr = arg.split('/')[-1]
             case "--grad":
                 with open(arg) as textFile:
                     gradient = [line.split() for line in textFile]
