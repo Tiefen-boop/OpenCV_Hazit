@@ -255,10 +255,27 @@ def is_line_unique(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_alpha(line, lines, max_diff_alpha=6):
-    pass  # TODO implement this method
+def is_line_unique_by_alpha(line, lines, max_diff_alpha=25,max_distance=20):
+    r, theta = cart_to_polar(line)
+    alpha = get_alpha_by_theta(theta)
+    for existing_line in lines:
+        r2, theta2 = cart_to_polar(existing_line)
+        alpha2 = get_alpha_by_theta(theta2)
+        if abs(alpha - alpha2) < max_diff_alpha and abs(r - r2) < max_distance:
+            return False
 
+    return True
 
+def get_alpha_by_theta(theta):
+    if theta == 0:  # line is of the form X=const
+        return float('inf')
+    if theta == 90:  # line is of the form y=const
+        return 0
+    if theta > 0:
+        alpha = theta - 90
+    else:
+        alpha = theta + 90
+    return alpha
 def line_to_linear_equation_function(line):
     x1, y1 = line[0][:2]
     x2, y2 = line[-1][:2]
@@ -344,7 +361,7 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
     for line in lines_sorted_descending:
         if len(line) <= 1:
             continue
-        if is_line_unique_by_avg_distance(line, top4):
+        if is_line_unique_by_alpha(line, top4):
             top4.append(line)
             if len(top4) == amount_of_lines:
                 break
