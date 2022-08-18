@@ -48,6 +48,18 @@ def compute_gradient(image, mask):
     return apply_mask(gradient, mask)
 
 
+# def compute_gradiant_by_median(image, mask):
+#     gradient = compute_gradient(image, mask)
+#     gradient = filter_gradient(gradient, 0)  # remove negative values
+#     return filter_gradient(gradient, np.median(gradient))  # remove values under the median value
+#
+#
+# def compute_gradient_by_median_on_abs_grad(image, mask):
+#     gradient = compute_gradient(image, mask)
+#     gradient = absolute_gradient(gradient)  # remove negative values
+#     return filter_gradient(gradient, np.median(gradient))  # remove values under the median value
+
+
 # performs all calculation in order to compute the absolute value gradient
 def compute_absolute_gradient(image, mask):
     gradient = compute_gradient(image, mask)
@@ -64,5 +76,7 @@ ALL_METHODS = [compute_gradient, compute_absolute_gradient]
 
 METHOD_TO_NAME = {
     compute_gradient: "Normal_Gradient",
-    compute_absolute_gradient: "Absolute_Gradient"
+    compute_absolute_gradient: "Absolute_Gradient",
+    # compute_gradiant_by_median: "Median_Gradient",
+    # compute_gradient_by_median_on_abs_grad: "Median_Gradient_on_Abs_Grad"
 }

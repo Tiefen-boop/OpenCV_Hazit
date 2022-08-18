@@ -6,7 +6,7 @@ import threading
 
 import cv2
 import numpy as np
-
+from line_unique_functions import *
 import helpFunctions
 from helpFunctions import cut_to_intersection, plot_images
 
@@ -241,32 +241,6 @@ def limit_line_to_relevant_edges(line, threshold=1):
     return limited_line
 
 
-def cart_to_polar(line):
-    x1, y1 = line[0][:2]
-    x2, y2 = line[-1][:2]
-    if x1 == x2:
-        theta = 0
-        r = x1
-    else:
-        m = (y2 - y1) / (x2 - x1)
-        coefs = [m, y1 - m * x1]
-        # coefs = np.polyfit([x1, x2], [y1, y2], 1)
-        r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
-        alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
-        if coefs[1] < 0:
-            theta = - (90 - alpha)
-        else:
-            theta = 90 + alpha
-    return [r, theta]
-
-
-def is_line_unique(line, lines, max_distance=6):
-    r, theta = cart_to_polar(line)
-    for existing_line in lines:
-        r2, theta2 = cart_to_polar(existing_line)
-        if round(theta, 3) == round(theta2, 3) and abs(r - r2) < max_distance:
-            return False
-    return True
 
 
 def get_top_lines(lines, laplaced, method):
@@ -278,7 +252,7 @@ def get_top_lines(lines, laplaced, method):
     return top4
 
 
-def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
+def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_unique_by_alpha, amount_of_lines=4):
     lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
     lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
                             dtype=object)
@@ -288,7 +262,7 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
     for line in lines_sorted_descending:
         if len(line) <= 1:
             continue
-        if is_line_unique(line, top4):
+        if method_line_uniqueness(line, top4):
             top4.append(line)
             if len(top4) == amount_of_lines:
                 break
@@ -303,14 +277,14 @@ def get_top_lines_2(lines, laplaced, method, amount_of_lines=4):
 lock = threading.Lock()  # todo delete this lock
 
 
-def main(image, gradient, hough_space, scoring_method):
+def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    if METHOD_TO_NAME[scoring_method] == "By Density":
+    if (METHOD_TO_NAME[scoring_method] == "By Density"):  # todo delete this if statement
         x = 5
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     print(METHOD_TO_NAME[scoring_method])
 
-    top_lines = get_top_lines_2(lines, gradient, scoring_method, amount_of_lines=4)
+    top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
 
     drawn_image = copy.deepcopy(image)

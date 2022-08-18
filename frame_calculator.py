@@ -12,12 +12,11 @@ import Lines_Stage
 import helpFunctions
 
 
-def thread_main(image, mask, gradient_computation_method, hough_space_computation_method):
+def thread_main(image, mask, gradient_computation_method, hough_space_computation_method,get_threshold_method=Hough_Space_Stage.get_threshold):
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
     os.makedirs(grad_dir, exist_ok=True)
-    space_dir = grad_dir + "/" + "threshold_" + str(Hough_Space_Stage.get_threshold()) + "/" + \
-                Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    space_dir = grad_dir + "/" + Hough_Space_Stage.GRADIANT_THRESHOLD_TO_NAME[get_threshold_method] +"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     if os.path.exists(space_dir):  # optional
         shutil.rmtree(space_dir)  # optional
     os.makedirs(space_dir)
@@ -33,12 +32,16 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     cv2.imwrite(space_dir + '/hough_space.png', hough_space)
     cv2.imwrite(space_dir + '/normalized_hough_space.png', hough_space * 255 / hough_space.max())
 
-    images = [image, gradient]
-    titles = ["Original", "Gradient"]
-    for method in Lines_Stage.ALL_METHODS:
-        images.append(Lines_Stage.main(image, gradient, hough_space, method))
-        titles.append(Lines_Stage.METHOD_TO_NAME[method])
-    helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir)
+
+    #for each uniqueness method
+    for uniqueness_method in line_unique_functions.ALL_METHODS:
+        images = [image, gradient]
+        titles = ["Original", "Gradient"]
+        for method in Lines_Stage.ALL_METHODS:
+            images.append(Lines_Stage.main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+            titles.append(Lines_Stage.METHOD_TO_NAME[method])
+        helpFunctions.plot_images(images, titles, show=False, dir_to_save=space_dir+"/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
+
 
 
 def main(argv):
@@ -80,8 +83,8 @@ def main(argv):
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_2]
 
     threads = []
-    for grad_method, space_method in itertools.product(gradient_computation_methods, space_computation_methods):
-        thread = threading.Thread(target=thread_main, args=(image, mask, grad_method, space_method))
+    for grad_method, space_method, threshold_computation_method in itertools.product(gradient_computation_methods, space_computation_methods, threshold_computation_methods):
+        thread = threading.Thread(target=thread_main, args=(image, mask, grad_method, space_method, threshold_computation_method))
         threads.append(thread)
         thread.start()
 

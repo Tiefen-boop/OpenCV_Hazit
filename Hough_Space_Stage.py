@@ -3,9 +3,16 @@ import numpy as np
 import itertools
 from tqdm import tqdm
 
+import Gradient_Stage
+
 
 def get_threshold(gradient=None):
     return 10
+
+
+def get_median_threshold(gradient):
+    gradient = Gradient_Stage.filter_gradient(gradient, 0)
+    return np.median(gradient)
 
 
 def mat_to_vector_of_relevant_points(gradient, threshold=0):
@@ -14,8 +21,8 @@ def mat_to_vector_of_relevant_points(gradient, threshold=0):
     return points
 
 
-def compute_hough_space_1_optimized(gradient):
-    points = mat_to_vector_of_relevant_points(gradient, get_threshold(gradient))
+def compute_hough_space_1_optimized(gradient, method=get_threshold):
+    points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -44,8 +51,8 @@ def compute_hough_space_1_optimized(gradient):
     return hough_space
 
 
-def compute_hough_space_1_optimized2(gradient):
-    points = mat_to_vector_of_relevant_points(gradient, get_threshold(gradient))
+def compute_hough_space_1_optimized2(gradient, method=get_threshold):
+    points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -73,8 +80,8 @@ def compute_hough_space_1_optimized2(gradient):
     return hough_space
 
 
-def compute_hough_space_2(gradient):
-    points = mat_to_vector_of_relevant_points(gradient, get_threshold(gradient))
+def compute_hough_space_2(gradient,method=get_threshold):
+    points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
@@ -84,7 +91,7 @@ def compute_hough_space_2(gradient):
         x, y = p
         for theta in range(-89, 179):
             theta_rad = theta * np.pi / 180
-            r = np.abs(int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))) )
+            r = np.abs(int((x * np.cos(theta_rad)) + (y * np.sin(theta_rad))))
             theta = (theta + 180) % 360  # rotate theta
             hough_space[r][theta] = hough_space[r][theta] + 1  # + gradient[y][x]
     hough_space = hough_space  # * 255 / hough_space.max()
@@ -92,8 +99,8 @@ def compute_hough_space_2(gradient):
 
 
 # using computation_method to produce a hough space for given gradient
-def main(computation_method, gradient):
-    return computation_method(gradient)
+def main(computation_method, gradient, method=get_threshold):
+    return computation_method(gradient, method)
 
 
 # constants for this stage
@@ -103,4 +110,9 @@ METHOD_TO_NAME = {
     compute_hough_space_1_optimized: "O(n^2)",
     compute_hough_space_1_optimized2: "O(n^2)_alt",
     compute_hough_space_2: "O(n)"
+}
+ALL_GRADIANT_THRESHOLD_METHODS = [get_threshold, get_median_threshold]
+GRADIANT_THRESHOLD_TO_NAME = {
+    get_threshold: "threshold_"+str(get_threshold()),
+    get_median_threshold: "median_threshold"
 }
