@@ -67,18 +67,18 @@ def main(argv):
                 sys.exit()
             case "-i" | "--image":
                 image = cv2.imread(arg)
-                image_addr = arg
+                image_addr = arg.split('/')[-1]
             case "-m" | "--mask":
                 mask = cv2.imread(arg)
                 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask_addr = arg
+                mask_addr = arg.split('/')[-1]
     if image is None:
         print('no image: test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
 
-    image_dir = "Computation_For_" + image_addr.split('/')[-1]
+    image_dir = "Computation_For_" + image_addr
     if mask is not None:
-        image_dir = image_dir + "_Given_mask_" + mask_addr.split('/')[-1]
+        image_dir = image_dir + "_Given_mask_" + mask_addr
     wd = helpFunctions.build_working_dir(image_dir, exist_ok=True)
     os.chdir(wd)
 
