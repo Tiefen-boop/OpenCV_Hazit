@@ -12,11 +12,11 @@ import Lines_Stage
 import helpFunctions
 
 
-def thread_main(image, mask, gradient_computation_method, hough_space_computation_method):
+def thread_main(image, mask, gradient_computation_method, hough_space_computation_method,get_threshold_method=Hough_Space_Stage.get_threshold):
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
     os.makedirs(grad_dir, exist_ok=True)
-    space_dir = grad_dir + "/" + "threshold_" + str(Hough_Space_Stage.get_threshold())+"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
+    space_dir = grad_dir + "/" + Hough_Space_Stage.GRADIANT_THRESHOLD_TO_NAME[get_threshold_method] +"/" + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]
     if os.path.exists(space_dir):  # optional
         shutil.rmtree(space_dir)   # optional
     os.makedirs(space_dir)
@@ -73,15 +73,16 @@ def main(argv):
     os.makedirs(image_dir, exist_ok=True)
     os.chdir(image_dir)
 
-    gradient_computation_methods = [Gradient_Stage.compute_gradient]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
+    threshold_computation_methods = [Hough_Space_Stage.get_threshold, Hough_Space_Stage.get_median_threshold]
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_2]
 
     threads = []
-    for grad_method, space_method in itertools.product(gradient_computation_methods, space_computation_methods):
-        thread = threading.Thread(target=thread_main, args=(image, mask, grad_method, space_method))
+    for grad_method, space_method, threshold_computation_method in itertools.product(gradient_computation_methods, space_computation_methods, threshold_computation_methods):
+        thread = threading.Thread(target=thread_main, args=(image, mask, grad_method, space_method, threshold_computation_method))
         threads.append(thread)
         thread.start()
 
