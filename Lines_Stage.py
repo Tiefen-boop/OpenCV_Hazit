@@ -1,9 +1,13 @@
 import copy
+import getopt
 import math
+import sys
 import threading
 
 import cv2
 import numpy as np
+
+import line_unique_functions
 from line_unique_functions import *
 import helpFunctions
 from helpFunctions import cut_to_intersection, plot_images
@@ -86,7 +90,7 @@ def create_line_iterator(points, img):
     # Get intensities from img ndarray
     itbuffer[:, 2] = img[itbuffer[:, 1].astype(np.uint), itbuffer[:, 0].astype(np.uint)]
 
-    return itbuffer.astype(int)
+    return itbuffer
 
 
 def find_coordinates_of_max_values(matrix, amount_of_values):
@@ -203,6 +207,18 @@ def score_by_frequency2(line, gradient):
     return score / line.size if line.size > 0 else -1000000000
 
 
+def score_by_gap_histogram(line, gradient):
+    threshold = get_threshold(gradient)
+    histogram = np.zeros(line[:, 2].size, dtype=int)
+    gap_size = 0
+    for val in line[:, 2]:
+        if val > threshold and gap_size > 0:
+            histogram[gap_size] += 1
+            gap_size = 0
+        else:
+            gap_size += 1
+
+
 def draw_all_lines(img, lines):
     for line in lines:
         # line=np.array(line)
@@ -225,8 +241,6 @@ def limit_line_to_relevant_edges(line, threshold=1):
             limited_line = limited_line[0:pointInd]
             break
     return limited_line
-
-
 
 
 def get_top_lines(lines, laplaced, method):
@@ -265,6 +279,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
+
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
@@ -274,6 +289,51 @@ def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is
     lock.release()
     return drawn_image
 
+
+def standalone(argv):
+    image_addr = None
+    image = None
+    gradient = None
+    hough_space = None
+    try:
+        opts, args = getopt.getopt(argv, "h", ["image=", "grad=", "space="])
+    except getopt.GetoptError:
+        print('test.py -i <input_image> [-m <input_mask>]')
+        sys.exit(2)
+    for opt, arg in opts:
+        match opt:
+            case '-h':
+                print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
+                sys.exit()
+            case "--image":
+                image = cv2.imread(arg)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                image_addr = arg
+            case "--grad":
+                with open(arg) as textFile:
+                    gradient = [line.split() for line in textFile]
+                gradient = np.array(gradient, dtype=int)
+            case "--space":
+                with open(arg) as textFile:
+                    hough_space = [line.split() for line in textFile]
+                hough_space = np.array(hough_space, dtype=int)
+    if image is None or gradient is None or hough_space is None:
+        print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
+        sys.exit(2)
+    wd = helpFunctions.build_working_dir("lines_stage_for_" + image_addr)
+    for uniqueness_method in line_unique_functions.ALL_METHODS:
+        images = [image, gradient]
+        titles = ["Original", "Gradient"]
+        for method in ALL_METHODS:
+            images.append(
+                main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+            titles.append(METHOD_TO_NAME[method])
+        helpFunctions.plot_images(images, titles, show=False,
+                                  dir_to_save=wd + "/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
+
+
+if __name__ == "__main__":
+    standalone(sys.argv[1:])
 
 # constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2]

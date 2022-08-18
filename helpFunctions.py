@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 import threading
 from datetime import datetime
 import numpy as np
@@ -114,4 +115,14 @@ def edged_line(line, edges):  # edges is an array of 2 indices
         return line
     return np.array(line[min_intersection_index:max_intersection_index + 1])
 
+
+def build_working_dir(*args, exist_ok=False):
+    wd = "."
+    for dir in args:
+        wd = wd + "/" + dir
+        os.makedirs(wd, exist_ok=True)
+    if not exist_ok:
+        shutil.rmtree(wd)
+        os.makedirs(wd)
+    return wd
 
