@@ -1,4 +1,5 @@
 import numpy as np
+import sympy as sy
 
 
 def cart_to_polar(line):
@@ -18,6 +19,7 @@ def cart_to_polar(line):
         else:
             theta = 90 + alpha
     return [r, theta]
+
 
 def is_line_unique(line, lines, max_distance=6):
     r, theta = cart_to_polar(line)
@@ -136,9 +138,6 @@ def is_line_unique_by_avg_distance(line, lines, max_distance=6):
     return True
 
 
-import sympy as sy
-
-
 def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
@@ -162,9 +161,9 @@ def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
         if inverse:  # line is of the form x=const
             y_start = min(line[0][1], line[-1][1])
             y_end = max(line[0][1], line[-1][1])
-            y=sy.Symbol('y')
+            y = sy.Symbol('y')
             integral_res = sy.integrate(abs(x_start - second_line_func(y)), (y, y_start, y_end))
-            average_distance = integral_res/abs(y_end-y_start)
+            average_distance = integral_res / abs(y_end - y_start)
         else:
             x = sy.Symbol('x')
             integral_res = sy.integrate(first_line_func(x) - second_line_func(x), (x, x_start, x_end))
@@ -174,7 +173,8 @@ def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
     return True
 
 
-ALL_METHODS = [is_line_unique_by_avg_distance_using_integral,is_line_unique_by_avg_distance,is_line_unique_by_alpha, is_line_unique]
+ALL_METHODS = [is_line_unique_by_avg_distance_using_integral, is_line_unique_by_avg_distance, is_line_unique_by_alpha,
+               is_line_unique]
 
 METHOD_TO_NAME = {
     is_line_unique_by_avg_distance_using_integral: "uniqueness by avg distance using integral",
