@@ -3,14 +3,11 @@ import getopt
 import math
 import sys
 import threading
-
 import cv2
-import numpy as np
-
-import line_unique_functions
-from line_unique_functions import *
 import helpFunctions
-from helpFunctions import cut_to_intersection, plot_images
+import line_unique_functions
+from helpFunctions import cut_to_intersection
+from line_unique_functions import *
 
 
 def get_threshold(gradient):
@@ -220,7 +217,7 @@ def score_by_gap_histogram(line, gradient):
     score = 0
     for i in range(1, histogram.size):
         score -= (np.power(2, i)) * histogram[i]
-    return histogram / line.size if line.size > 0 else -1000000000
+    return score / line.size if line.size > 0 else -1000000000
 
 
 def draw_all_lines(img, lines):
@@ -276,8 +273,13 @@ def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_uniq
     return np.array(top4, dtype=object)
 
 
+# finds - based on given gradient, hough_space, scoring_method - the best lines
+# returns the intersections of the lines + a copy of the image with the lines plotted on
+lock = threading.Lock()  # todo delete this lock
+
 # constants for this stage
-ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2, score_by_gap_histogram]
+ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2,
+               score_by_gap_histogram]
 
 METHOD_TO_NAME = {
     score_by_gradients_quality: "By Quality",
@@ -285,20 +287,6 @@ METHOD_TO_NAME = {
     score_by_frequency: "By Frequency",
     score_by_frequency2: "By Frequency (alt)",
     score_by_gap_histogram: "By gap histogram"
-}
-
-# finds - based on given gradient, hough_space, scoring_method - the best lines
-# returns the intersections of the lines + a copy of the image with the lines plotted on
-lock = threading.Lock()  # todo delete this lock
-
-# constants for this stage
-ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2]
-
-METHOD_TO_NAME = {
-    score_by_gradients_quality: "By Quality",
-    score_by_density: "By Density",
-    score_by_frequency: "By Frequency",
-    score_by_frequency2: "By Frequency (alt)"
 }
 
 
