@@ -273,10 +273,6 @@ def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_uniq
     return np.array(top4, dtype=object)
 
 
-# finds - based on given gradient, hough_space, scoring_method - the best lines
-# returns the intersections of the lines + a copy of the image with the lines plotted on
-lock = threading.Lock()  # todo delete this lock
-
 # constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2,
                score_by_gap_histogram]
@@ -288,6 +284,10 @@ METHOD_TO_NAME = {
     score_by_frequency2: "By Frequency (alt)",
     score_by_gap_histogram: "By gap histogram"
 }
+
+# finds - based on given gradient, hough_space, scoring_method - the best lines
+# returns the intersections of the lines + a copy of the image with the lines plotted on
+lock = threading.Lock()  # todo delete this lock
 
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
