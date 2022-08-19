@@ -217,6 +217,10 @@ def score_by_gap_histogram(line, gradient):
             gap_size = 0
         else:
             gap_size += 1
+    score = 0
+    for i in range(1, histogram.size):
+        score -= (np.power(2, i)) * histogram[i]
+    return histogram / line.size if line.size > 0 else -1000000000
 
 
 def draw_all_lines(img, lines):
@@ -273,6 +277,21 @@ def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_uniq
 
 
 # constants for this stage
+ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2, score_by_gap_histogram]
+
+METHOD_TO_NAME = {
+    score_by_gradients_quality: "By Quality",
+    score_by_density: "By Density",
+    score_by_frequency: "By Frequency",
+    score_by_frequency2: "By Frequency (alt)",
+    score_by_gap_histogram: "By gap histogram"
+}
+
+# finds - based on given gradient, hough_space, scoring_method - the best lines
+# returns the intersections of the lines + a copy of the image with the lines plotted on
+lock = threading.Lock()  # todo delete this lock
+
+# constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2]
 
 METHOD_TO_NAME = {
@@ -281,10 +300,6 @@ METHOD_TO_NAME = {
     score_by_frequency: "By Frequency",
     score_by_frequency2: "By Frequency (alt)"
 }
-
-# finds - based on given gradient, hough_space, scoring_method - the best lines
-# returns the intersections of the lines + a copy of the image with the lines plotted on
-lock = threading.Lock()  # todo delete this lock
 
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
@@ -332,8 +347,8 @@ def standalone(argv):
         sys.exit(2)
     wd = helpFunctions.build_working_dir("lines_stage_for_" + image_addr)
     for uniqueness_method in line_unique_functions.ALL_METHODS:
-        images = [image, gradient]
-        titles = ["Original", "Gradient"]
+        images = [image]
+        titles = ["Original"]
         for method in ALL_METHODS:
             images.append(
                 main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
@@ -344,13 +359,3 @@ def standalone(argv):
 
 if __name__ == "__main__":
     standalone(sys.argv[1:])
-
-# constants for this stage
-ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2]
-
-METHOD_TO_NAME = {
-    score_by_gradients_quality: "By Quality",
-    score_by_density: "By Density",
-    score_by_frequency: "By Frequency",
-    score_by_frequency2: "By Frequency (alt)"
-}

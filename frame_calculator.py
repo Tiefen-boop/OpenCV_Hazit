@@ -35,8 +35,8 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # for each uniqueness method
     for i in tqdm(range(len(line_unique_functions.ALL_METHODS)), desc="calculating different uniqueness methods"):
         uniqueness_method = line_unique_functions.ALL_METHODS[i]
-        images = [image, gradient]
-        titles = ["Original", "Gradient"]
+        images = [image]
+        titles = ["Original"]
         for method in Lines_Stage.ALL_METHODS:
             images.append(
                 Lines_Stage.main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
