@@ -82,7 +82,7 @@ def main(argv):
 
     threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile, Hough_Space_Stage.threshold_by_uniques_median_div2]
 
-    gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]

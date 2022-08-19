@@ -292,9 +292,10 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-
+    #todo run until 4 lines found
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
+
     top_lines = cut_to_intersection(top_lines)
 
     drawn_image = copy.deepcopy(image)
