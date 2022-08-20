@@ -158,8 +158,10 @@ def is_line_unique_by_avg_distance(image, line, lines, max_distance=6):
 def is_line_unique_by_avg_distance_using_integral(image, line, lines, max_distance=6):
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
+    y_start = min(line[0][1], line[-1][1])
+    y_end = max(line[0][1], line[-1][1])
     inverse = False
-    if x_start == x_end:
+    if (y_start == 0 or y_start == 1) and y_end == len(image) - 1:
         first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
         inverse = True
     else:
@@ -179,7 +181,7 @@ def is_line_unique_by_avg_distance_using_integral(image, line, lines, max_distan
             y_start = min(line[0][1], line[-1][1])
             y_end = max(line[0][1], line[-1][1])
             y = sy.Symbol('y')
-            integral_res = sy.integrate(abs(x_start - second_line_func(y)), (y, y_start, y_end))
+            integral_res = sy.integrate(abs(first_line_func(y) - second_line_func(y)), (y, y_start, y_end))
             average_distance = integral_res / abs(y_end - y_start)
         else:
             x = sy.Symbol('x')
