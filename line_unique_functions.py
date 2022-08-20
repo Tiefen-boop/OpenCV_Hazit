@@ -21,7 +21,7 @@ def cart_to_polar(line):
     return [r, theta]
 
 
-def is_line_unique(line, lines, max_distance=6):
+def is_line_unique(image, line, lines, max_distance=6):
     r, theta = cart_to_polar(line)
     for existing_line in lines:
         r2, theta2 = cart_to_polar(existing_line)
@@ -30,19 +30,14 @@ def is_line_unique(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_alpha(line, lines, max_diff_alpha=25, max_distance=25):
+def is_line_unique_by_alpha(image, line, lines, max_diff_alpha=25, max_distance=25):
     r, theta = cart_to_polar(line)
     alpha = get_alpha_by_theta(theta)
-    # alpha = get_alpha_of_line(line)
     for existing_line in lines:
-
         r2, theta2 = cart_to_polar(existing_line)
         alpha2 = get_alpha_by_theta(theta2)
-        # alpha2=get_alpha_of_line(existing_line)
-        # if abs((90-abs(alpha)) - (90-abs(alpha2))) < max_diff_alpha and abs(r - r2) < max_distance:
-
         if abs((90 - abs(alpha)) - (90 - abs(alpha2))) < max_diff_alpha and (
-        not is_line_unique_by_avg_distance(line, [existing_line], max_distance)):
+        not is_line_unique_by_avg_distance(image, line, [existing_line], max_distance)):
             return False
 
     return True
@@ -105,7 +100,7 @@ this function is implemented by the claim that the average distance is  derived 
 
 # not correct, maybe can be modified tp: if more than N "x" values have a distance lower than max_distance,
 # then the line is not unique
-def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
+def is_line_unique_by_distance_for_each_x(image, line, lines, max_distance=6):
     first_line_func = line_to_linear_equation_function_x_to_fx(line)
     for existing_line in lines:
         second_line_func = line_to_linear_equation_function_x_to_fx(existing_line)
@@ -117,14 +112,15 @@ def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_avg_distance(line, lines, max_distance=6):
+def is_line_unique_by_avg_distance(image, line, lines, max_distance=6):
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
     y_start = min(line[0][1], line[-1][1])
     y_end = max(line[0][1], line[-1][1])
 
     inverse = False
-    if (y_start == 0 or y_start == 1) and y_end == 471:
+
+    if (y_start == 0 or y_start == 1) and y_end == len(image) - 1:
         first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
         inverse = True
     else:
@@ -159,7 +155,7 @@ def is_line_unique_by_avg_distance(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
+def is_line_unique_by_avg_distance_using_integral(image, line, lines, max_distance=6):
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
     inverse = False
@@ -194,9 +190,9 @@ def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
     return True
 
 
-# ALL_METHODS = [is_line_unique_by_avg_distance_using_integral, is_line_unique_by_avg_distance, is_line_unique_by_alpha,
-#  is_line_unique]
-ALL_METHODS = [is_line_unique_by_alpha]
+ALL_METHODS = [is_line_unique_by_avg_distance_using_integral, is_line_unique_by_avg_distance, is_line_unique_by_alpha,
+  is_line_unique]
+# ALL_METHODS = [is_line_unique_by_alpha]
 
 METHOD_TO_NAME = {
     is_line_unique_by_avg_distance_using_integral: "uniqueness by avg distance using integral",

@@ -301,7 +301,7 @@ def get_top_lines_3(laplaced,hough_space, method, method_line_uniqueness=is_line
         for line in lines_sorted_descending:
             if len(line) <= 1:
                 continue
-            if method_line_uniqueness(line, top4):
+            if method_line_uniqueness(laplaced, line, top4):
                 top4.append(line)
                 if len(top4) == amount_of_lines:
                     break
