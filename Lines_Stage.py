@@ -218,6 +218,7 @@ def score_by_frequency2(line, gradient):
             current_sequence_size += 1
     return score / line.size if line.size > 0 else -1000000000
 
+import warnings
 
 def score_by_gap_histogram(line, gradient):
     threshold = get_threshold(gradient)
@@ -231,7 +232,11 @@ def score_by_gap_histogram(line, gradient):
             gap_size += 1
     score = 0
     for i in range(1, histogram.size):
-        score -= (np.power(2, i)) * histogram[i]
+        with warnings.catch_warnings():
+            try:
+                score -= (np.power(2, i)) * histogram[i]
+            except Warning:
+                score = -1000000000
     return score / line.size if line.size > 0 else -1000000000
 
 
@@ -350,10 +355,7 @@ def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is
 
 def main2(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    # todo run until 4 lines found
-
     top_lines = get_top_lines_3(gradient, hough_space, scoring_method, method_line_uniqueness, amount_of_lines=4)
-
     top_lines = cut_to_intersection(top_lines)
     drawn_image = copy.deepcopy(image)
     draw_all_lines(drawn_image, top_lines)

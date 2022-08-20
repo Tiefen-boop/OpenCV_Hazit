@@ -58,7 +58,7 @@ def compute_hough_space_1_optimized(gradient, method=get_threshold):
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    for p1 in tqdm(range(len(points))):
+    for p1 in tqdm(range(len(points)),desc="Computing Hough Space O(n^2)..."):
         [x1, y1] = points[p1]
         for p2 in range(p1 + 1, len(points)):
             [x2, y2] = points[p2]
@@ -117,7 +117,7 @@ def compute_hough_space_2(gradient, method=get_threshold):
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    for p in tqdm(points):
+    for p in tqdm(points,desc="Computing Hough Space O(n)..."):
         x, y = p
         for theta in range(-89, 179):
             theta_rad = theta * np.pi / 180

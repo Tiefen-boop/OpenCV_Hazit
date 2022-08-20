@@ -34,7 +34,8 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     cv2.imwrite(wd + '/normalized_hough_space.png', hough_space * 255 / hough_space.max())
 
     # for each uniqueness method
-    for i in tqdm(range(len(line_unique_functions.ALL_METHODS)), desc="calculating different uniqueness methods"):
+    for i in tqdm(range(len(line_unique_functions.ALL_METHODS)), desc="calculating different uniqueness methods for: "
+                                                                      "gradiant method: " + Gradient_Stage.METHOD_TO_NAME[gradient_computation_method] + ".space method: " + Hough_Space_Stage.METHOD_TO_NAME[hough_space_computation_method]):
         uniqueness_method = line_unique_functions.ALL_METHODS[i]
         images = [image]
         titles = ["Original"]

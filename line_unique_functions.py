@@ -165,6 +165,8 @@ def is_line_unique_by_avg_distance_using_integral(image, line, lines, max_distan
         first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
         inverse = True
     else:
+        if x_start == 0 or x_start == 1:
+            return False
         first_line_func = line_to_linear_equation_function_x_to_fx(line)
     for existing_line in lines:
         if inverse:
