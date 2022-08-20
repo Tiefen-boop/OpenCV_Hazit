@@ -218,11 +218,13 @@ def score_by_frequency2(line, gradient):
             current_sequence_size += 1
     return score / line.size if line.size > 0 else -1000000000
 
+
 import warnings
+
 
 def score_by_gap_histogram(line, gradient):
     threshold = get_threshold(gradient)
-    histogram = np.zeros(line[:, 2].size, dtype=int)
+    histogram = np.zeros(line[:, 2].size, dtype=np.int64)
     gap_size = 0
     for val in line[:, 2]:
         if val > threshold and gap_size > 0:
