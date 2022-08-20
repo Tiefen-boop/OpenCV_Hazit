@@ -70,14 +70,14 @@ def create_line_iterator(points, img):
                 itbuffer[:, 1] = np.arange(p1_y - 1, p1_y - d_y_a - 1, -1)
             else:
                 itbuffer[:, 1] = np.arange(p1_y + 1, p1_y + d_y_a + 1)
-            itbuffer[:, 0] = (slope * (itbuffer[:, 1] - p1_y)).astype(np.int) + p1_x
+            itbuffer[:, 0] = (slope * (itbuffer[:, 1] - p1_y)).astype(int) + p1_x
         else:
             slope = d_y.astype(np.float32) / d_x.astype(np.float32)
             if neg_x:
                 itbuffer[:, 0] = np.arange(p1_x - 1, p1_x - d_x_a - 1, -1)
             else:
                 itbuffer[:, 0] = np.arange(p1_x + 1, p1_x + d_x_a + 1)
-            itbuffer[:, 1] = (slope * (itbuffer[:, 0] - p1_x)).astype(np.int) + p1_y
+            itbuffer[:, 1] = (slope * (itbuffer[:, 0] - p1_x)).astype(int) + p1_y
 
     # Remove points outside of image
     col_x = itbuffer[:, 0]

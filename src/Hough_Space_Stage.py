@@ -18,7 +18,6 @@ def get_threshold(gradient=None):
 def thres_1(gradient):
     gradient = np.unique(gradient)
     gradient = [x for x in gradient if x > 0]
-    print(np.median(gradient))
     return np.median(gradient)
 
 

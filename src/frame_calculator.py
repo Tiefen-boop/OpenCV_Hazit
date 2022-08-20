@@ -55,7 +55,7 @@ def main(argv):
     mask = None
     color = (255, 0, 0)  # default red color for drawn lines
     try:
-        opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask="])
+        opts, args = getopt.getopt(argv, "hi:m:", ["image=", "mask=", "color="])
     except getopt.GetoptError:
         print('test.py -i <input_image> [-m <input_mask>] [-c red|green|blue]')
         sys.exit(2)
@@ -87,7 +87,7 @@ def main(argv):
     wd = helpFunctions.build_working_dir(image_dir, exist_ok=True)
     os.chdir(wd)
 
-    gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient]
 
     # threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile,
     #                                 Hough_Space_Stage.threshold_by_uniques_median_div2]
