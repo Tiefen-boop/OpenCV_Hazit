@@ -114,8 +114,9 @@ def find_next_max_valued_lines_2(hough_space, gradient, sorted_coordinates, from
     lines = [create_line_iterator(find_line_two_ver(gradient, coordinate), gradient)
              for coordinate in sorted_coordinates[from_index:from_index + amount_of_lines]]
 
-
     return lines
+
+
 def find_line_two_ver(matrix, coordinate):
     r = coordinate[1]
     theta = (coordinate[0] - 180)
@@ -286,9 +287,11 @@ def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_uniq
 
     return np.array(top4, dtype=object)
 
-def get_top_lines_3(laplaced,hough_space, method, method_line_uniqueness=is_line_unique_by_alpha, amount_of_lines=4):
+
+def get_top_lines_3(laplaced, hough_space, method, method_line_uniqueness=is_line_unique_by_alpha, amount_of_lines=4):
     sorted_coordinates = find_sorted_coordinates_by_value(hough_space)
-    lines = find_next_max_valued_lines_2(hough_space=hough_space,gradient=laplaced, sorted_coordinates=sorted_coordinates, from_index=0, amount_of_lines=20)
+    lines = find_next_max_valued_lines_2(hough_space=hough_space, gradient=laplaced,
+                                         sorted_coordinates=sorted_coordinates, from_index=0, amount_of_lines=20)
     top4 = []
     from_index = 10
     amount_of_next_lines = 20
@@ -313,6 +316,7 @@ def get_top_lines_3(laplaced,hough_space, method, method_line_uniqueness=is_line
 
     return np.array(top4, dtype=object)
 
+
 # constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2,
                score_by_gap_histogram]
@@ -332,7 +336,7 @@ lock = threading.Lock()  # todo delete this lock
 
 def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    #todo run until 4 lines found
+    # todo run until 4 lines found
     lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
     top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
 
@@ -343,9 +347,10 @@ def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is
     lock.release()
     return drawn_image
 
+
 def main2(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
     lock.acquire()
-    #todo run until 4 lines found
+    # todo run until 4 lines found
 
     top_lines = get_top_lines_3(gradient, hough_space, scoring_method, method_line_uniqueness, amount_of_lines=4)
 
@@ -354,6 +359,7 @@ def main2(image, gradient, hough_space, scoring_method, method_line_uniqueness=i
     draw_all_lines(drawn_image, top_lines)
     lock.release()
     return drawn_image
+
 
 def standalone(argv):
     image_addr = None
@@ -366,22 +372,21 @@ def standalone(argv):
         print('test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
     for opt, arg in opts:
-        match opt:
-            case '-h':
-                print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
-                sys.exit()
-            case "--image":
-                image = cv2.imread(arg)
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                image_addr = arg.split('/')[-1]
-            case "--grad":
-                with open(arg) as textFile:
-                    gradient = [line.split() for line in textFile]
-                gradient = np.array(gradient, dtype=int)
-            case "--space":
-                with open(arg) as textFile:
-                    hough_space = [line.split() for line in textFile]
-                hough_space = np.array(hough_space, dtype=int)
+        if opt == '-h':
+            print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
+            sys.exit()
+        elif opt == "--image":
+            image = cv2.imread(arg)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image_addr = arg.split('/')[-1].split('\\')[-1]
+        elif opt == "--grad":
+            with open(arg) as textFile:
+                gradient = [line.split() for line in textFile]
+            gradient = np.array(gradient, dtype=int)
+        elif opt == "--space":
+            with open(arg) as textFile:
+                hough_space = [line.split() for line in textFile]
+            hough_space = np.array(hough_space, dtype=int)
     if image is None or gradient is None or hough_space is None:
         print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
         sys.exit(2)

@@ -13,7 +13,8 @@ import line_unique_functions
 from tqdm import tqdm
 
 
-def thread_main(image, mask, gradient_computation_method, hough_space_computation_method, get_threshold_method=Hough_Space_Stage.get_threshold):
+def thread_main(image, mask, gradient_computation_method, hough_space_computation_method,
+                get_threshold_method=Hough_Space_Stage.get_threshold):
     # moving to correct working directory (and cleaning it)
     grad_dir = Gradient_Stage.METHOD_TO_NAME[gradient_computation_method]
 
@@ -57,17 +58,16 @@ def main(argv):
         print('test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
     for opt, arg in opts:
-        match opt:
-            case '-h':
-                print('test.py -i <input_image> [-m <input_mask>]')
-                sys.exit()
-            case "-i" | "--image":
-                image = cv2.imread(arg)
-                image_addr = arg.split('/')[-1]
-            case "-m" | "--mask":
-                mask = cv2.imread(arg)
-                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask_addr = arg.split('/')[-1]
+        if opt == '-h':
+            print('test.py -i <input_image> [-m <input_mask>]')
+            sys.exit()
+        elif opt == "-i" or opt == "--image":
+            image = cv2.imread(arg)
+            image_addr = arg.split('/')[-1].split('\\')[-1]
+        elif opt == "-m" or opt == "--mask":
+            mask = cv2.imread(arg)
+            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+            mask_addr = arg.split('/')[-1].split('\\')[-1]
     if image is None:
         print('no image: test.py -i <input_image> [-m <input_mask>]')
         sys.exit(2)
@@ -80,7 +80,8 @@ def main(argv):
 
     # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
 
-    threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile, Hough_Space_Stage.threshold_by_uniques_median_div2]
+    threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile,
+                                     Hough_Space_Stage.threshold_by_uniques_median_div2]
     threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile]
 
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
