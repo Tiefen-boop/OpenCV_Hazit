@@ -51,14 +51,14 @@ def mat_to_vector_of_relevant_points(gradient, threshold=0):
     return points
 
 
-def compute_hough_space_1_optimized(gradient, method=get_threshold):
+def compute_hough_space_1_optimized(gradient, method=get_threshold, gradient_method_name=Gradient_Stage.METHOD_TO_NAME[Gradient_Stage.ALL_METHODS[0]]):
     points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    for p1 in tqdm(range(len(points)),desc="Computing Hough Space O(n^2)..."):
+    for p1 in tqdm(range(len(points)),desc="Computing Hough Space O(n^2) for gradient method "+str(gradient_method_name)+"..."):
         [x1, y1] = points[p1]
         for p2 in range(p1 + 1, len(points)):
             [x2, y2] = points[p2]
@@ -110,14 +110,14 @@ def compute_hough_space_1_optimized2(gradient, method=get_threshold):
     return hough_space
 
 
-def compute_hough_space_2(gradient, method=get_threshold):
+def compute_hough_space_2(gradient, method=get_threshold, gradient_method_name=Gradient_Stage.METHOD_TO_NAME[Gradient_Stage.ALL_METHODS[0]]):
     points = mat_to_vector_of_relevant_points(gradient, method(gradient))
     y_max = len(gradient)
     x_max = len(gradient[0])
     r_max = int(math.hypot(x_max, y_max))
     theta_max = 360
     hough_space = np.zeros((r_max, theta_max))
-    for p in tqdm(points,desc="Computing Hough Space O(n)..."):
+    for p in tqdm(points, desc="Computing Hough Space O(n) for gradient method "+str(gradient_method_name)+"..."):
         x, y = p
         for theta in range(-89, 179):
             theta_rad = theta * np.pi / 180
@@ -159,8 +159,8 @@ def compute_hough_space_1_optimized_considering_gradient(gradient, method=get_th
 
 
 # using computation_method to produce a hough space for given gradient
-def main(computation_method, gradient, method=get_threshold):
-    return computation_method(gradient, method)
+def main(computation_method, gradient, method=get_threshold, gradient_method_name=Gradient_Stage.METHOD_TO_NAME[Gradient_Stage.ALL_METHODS[0]]):
+    return computation_method(gradient, method,gradient_method_name)
 
 
 # constants for this stage

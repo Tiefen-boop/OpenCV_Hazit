@@ -25,7 +25,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
     # performing computations
     gradient = Gradient_Stage.main(gradient_computation_method, image, mask)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient, get_threshold_method)
+    hough_space = Hough_Space_Stage.main(hough_space_computation_method, gradient, get_threshold_method, grad_dir)
     # saving computed data for future runs
     np.savetxt(wd + '/gradient.txt', gradient, fmt='%.0f')
     np.savetxt(wd + '/hough_space.txt', hough_space, fmt='%.0f')
@@ -79,13 +79,13 @@ def main(argv):
     wd = helpFunctions.build_working_dir(image_dir, exist_ok=True)
     os.chdir(wd)
 
-    # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
+    gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
 
     threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile,
                                      Hough_Space_Stage.threshold_by_uniques_median_div2]
     threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile]
 
-    gradient_computation_methods = [Gradient_Stage.compute_gradient]
+    #gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,
                                  Hough_Space_Stage.compute_hough_space_2]
     # space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized]
