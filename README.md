@@ -5,7 +5,7 @@ More information about the approach and conclusions can be found in the report.
 
 manuals for the compiled distributables which reside at the dist directory:
 
-#frame_calculator.exe (the whole algorithm):
+# frame_calculator.exe (the whole algorithm):
 
 synopsis:
 frame_calculator.exe --image path/to/image.png [--mask path/to/mask.png] [--color red|green|blue]
@@ -19,7 +19,7 @@ description:
     in what color should the final lines be drawn with (red, green, or blue), not mandatory
     
     
-#Lines_Stage.exe (the line finding process - after hough space was calculated)
+# Lines_Stage.exe (the line finding process - after hough space was calculated)
 
 synopsis:
 Lines_Stage.exe --image path/to/image.png --grad path/to/gradient.txt --space path/to/hough_space.txt [--color red|green|blue]
