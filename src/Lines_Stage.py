@@ -242,14 +242,14 @@ def score_by_gap_histogram(line, gradient):
     return score / line.size if line.size > 0 else -1000000000
 
 
-def draw_all_lines(img, lines):
+def draw_all_lines(img, lines, color):
     for line in lines:
         # line=np.array(line)
         if line.size == 0:
             continue
         p1 = line[0]
         p2 = line[-1]
-        cv2.line(img, (round(p1[0]), round(p1[1])), (round(p2[0]), round(p2[1])), (0, 0, 255), 2)
+        cv2.line(img, (round(p1[0]), round(p1[1])), (round(p2[0]), round(p2[1])), color, 3)
 
 
 def limit_line_to_relevant_edges(line, threshold=1):
@@ -336,32 +336,16 @@ METHOD_TO_NAME = {
     score_by_gap_histogram: "By gap histogram"
 }
 
+
 # finds - based on given gradient, hough_space, scoring_method - the best lines
 # returns the intersections of the lines + a copy of the image with the lines plotted on
-lock = threading.Lock()  # todo delete this lock
 
 
-def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
-    lock.acquire()
-    # todo run until 4 lines found
-    lines = find_max_valued_lines(hough_space, gradient, amount_of_lines=20)
-    top_lines = get_top_lines_2(lines, gradient, scoring_method, method_line_uniqueness, amount_of_lines=4)
-
-    top_lines = cut_to_intersection(top_lines)
-
-    drawn_image = copy.deepcopy(image)
-    draw_all_lines(drawn_image, top_lines)
-    lock.release()
-    return drawn_image
-
-
-def main2(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
-    lock.acquire()
+def main(image, gradient, hough_space, scoring_method, color, method_line_uniqueness=is_line_unique_by_alpha):
     top_lines = get_top_lines_3(gradient, hough_space, scoring_method, method_line_uniqueness, amount_of_lines=4)
     top_lines = cut_to_intersection(top_lines)
     drawn_image = copy.deepcopy(image)
-    draw_all_lines(drawn_image, top_lines)
-    lock.release()
+    draw_all_lines(drawn_image, top_lines, color)
     return drawn_image
 
 
@@ -370,14 +354,15 @@ def standalone(argv):
     image = None
     gradient = None
     hough_space = None
+    color = (255, 0, 0)  # default red color
     try:
-        opts, args = getopt.getopt(argv, "h", ["image=", "grad=", "space="])
+        opts, args = getopt.getopt(argv, "h", ["image=", "grad=", "space=", "color="])
     except getopt.GetoptError:
-        print('test.py -i <input_image> [-m <input_mask>]')
+        print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space> [--color red|green|blue]')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
+            print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space> [--color red|green|blue]')
             sys.exit()
         elif opt == "--image":
             image = cv2.imread(arg)
@@ -391,8 +376,15 @@ def standalone(argv):
             with open(arg) as textFile:
                 hough_space = [line.split() for line in textFile]
             hough_space = np.array(hough_space, dtype=int)
+        elif opt == "--color":
+            if arg == "red" or arg == "r":
+                color = (255, 0, 0)
+            elif arg == "green" or arg == "g":
+                color = (0, 255, 0)
+            elif arg == "blue" or arg == "b":
+                color = (0, 0, 255)
     if image is None or gradient is None or hough_space is None:
-        print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space>')
+        print('test.py --image <input_image> --grad <input_gradient> --space <input_hough_space> [--color red|green|blue]')
         sys.exit(2)
     wd = helpFunctions.build_working_dir("lines_stage_for_" + image_addr)
     for uniqueness_method in line_unique_functions.ALL_METHODS:
@@ -400,7 +392,7 @@ def standalone(argv):
         titles = ["Original"]
         for method in ALL_METHODS:
             images.append(
-                main2(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+                main(image, gradient, hough_space, method, color, method_line_uniqueness=uniqueness_method))
             titles.append(METHOD_TO_NAME[method])
         helpFunctions.plot_images(images, titles, show=False,
                                   dir_to_save=wd + "/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])
