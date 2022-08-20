@@ -102,6 +102,20 @@ def find_coordinates_of_max_values(matrix, amount_of_values):
     return matrix_indexes
 
 
+def find_sorted_coordinates_by_value(matrix):
+    flatted = matrix.flatten()
+    indexes = np.argsort(flatted)
+    matrix_indexes = [np.array([int(index % len(matrix[0])), int(index / len(matrix[0]))]) for index in indexes]
+    matrix_indexes.reverse()
+    return matrix_indexes
+
+
+def find_next_max_valued_lines_2(hough_space, gradient, sorted_coordinates, from_index, amount_of_lines=10):
+    lines = [create_line_iterator(find_line_two_ver(gradient, coordinate), gradient)
+             for coordinate in sorted_coordinates[from_index:from_index + amount_of_lines]]
+
+
+    return lines
 def find_line_two_ver(matrix, coordinate):
     r = coordinate[1]
     theta = (coordinate[0] - 180)
@@ -272,6 +286,32 @@ def get_top_lines_2(lines, laplaced, method, method_line_uniqueness=is_line_uniq
 
     return np.array(top4, dtype=object)
 
+def get_top_lines_3(laplaced,hough_space, method, method_line_uniqueness=is_line_unique_by_alpha, amount_of_lines=4):
+    sorted_coordinates = find_sorted_coordinates_by_value(hough_space)
+    lines = find_next_max_valued_lines_2(hough_space=hough_space,gradient=laplaced, sorted_coordinates=sorted_coordinates, from_index=0, amount_of_lines=20)
+    top4 = []
+    from_index = 10
+    amount_of_next_lines = 20
+    while len(top4) < 4:
+        lines_limited = [limit_line_to_relevant_edges(line) for line in lines]
+        lines_scored = np.array([[lines[i], method(lines_limited[i], laplaced)] for i in range(len(lines_limited))],
+                                dtype=object)
+        indices_of_descending_values = lines_scored[:, -1].argsort()[::-1]
+        lines_sorted_descending = lines_scored[indices_of_descending_values][:, 0]
+        for line in lines_sorted_descending:
+            if len(line) <= 1:
+                continue
+            if method_line_uniqueness(line, top4):
+                top4.append(line)
+                if len(top4) == amount_of_lines:
+                    break
+        if len(top4) < amount_of_lines:
+            lines = find_next_max_valued_lines_2(hough_space=hough_space, gradient=laplaced,
+                                                 sorted_coordinates=sorted_coordinates, from_index=from_index,
+                                                 amount_of_lines=amount_of_next_lines)
+            from_index = from_index + amount_of_next_lines
+
+    return np.array(top4, dtype=object)
 
 # constants for this stage
 ALL_METHODS = [score_by_gradients_quality, score_by_density, score_by_frequency, score_by_frequency2,
@@ -303,6 +343,17 @@ def main(image, gradient, hough_space, scoring_method, method_line_uniqueness=is
     lock.release()
     return drawn_image
 
+def main2(image, gradient, hough_space, scoring_method, method_line_uniqueness=is_line_unique_by_alpha):
+    lock.acquire()
+    #todo run until 4 lines found
+
+    top_lines = get_top_lines_3(gradient, hough_space, scoring_method, method_line_uniqueness, amount_of_lines=4)
+
+    top_lines = cut_to_intersection(top_lines)
+    drawn_image = copy.deepcopy(image)
+    draw_all_lines(drawn_image, top_lines)
+    lock.release()
+    return drawn_image
 
 def standalone(argv):
     image_addr = None
@@ -340,7 +391,7 @@ def standalone(argv):
         titles = ["Original"]
         for method in ALL_METHODS:
             images.append(
-                main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+                main2(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
             titles.append(METHOD_TO_NAME[method])
         helpFunctions.plot_images(images, titles, show=False,
                                   dir_to_save=wd + "/" + line_unique_functions.METHOD_TO_NAME[uniqueness_method])

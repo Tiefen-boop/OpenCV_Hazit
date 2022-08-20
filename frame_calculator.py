@@ -39,7 +39,7 @@ def thread_main(image, mask, gradient_computation_method, hough_space_computatio
         titles = ["Original"]
         for method in Lines_Stage.ALL_METHODS:
             images.append(
-                Lines_Stage.main(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
+                Lines_Stage.main2(image, gradient, hough_space, method, method_line_uniqueness=uniqueness_method))
             titles.append(Lines_Stage.METHOD_TO_NAME[method])
         helpFunctions.plot_images(images, titles, show=False,
 
@@ -81,6 +81,7 @@ def main(argv):
     # gradient_computation_methods = [Gradient_Stage.compute_gradient, Gradient_Stage.compute_absolute_gradient]
 
     threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile, Hough_Space_Stage.threshold_by_uniques_median_div2]
+    threshold_computation_methods = [Hough_Space_Stage.threshold_by_percentile]
 
     gradient_computation_methods = [Gradient_Stage.compute_gradient]
     space_computation_methods = [Hough_Space_Stage.compute_hough_space_1_optimized,

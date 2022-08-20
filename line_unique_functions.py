@@ -30,13 +30,19 @@ def is_line_unique(line, lines, max_distance=6):
     return True
 
 
-def is_line_unique_by_alpha(line, lines, max_diff_alpha=25, max_distance=20):
+def is_line_unique_by_alpha(line, lines, max_diff_alpha=25, max_distance=25):
     r, theta = cart_to_polar(line)
     alpha = get_alpha_by_theta(theta)
+    # alpha = get_alpha_of_line(line)
     for existing_line in lines:
+
         r2, theta2 = cart_to_polar(existing_line)
         alpha2 = get_alpha_by_theta(theta2)
-        if abs(alpha - alpha2) < max_diff_alpha and abs(r - r2) < max_distance:
+        # alpha2=get_alpha_of_line(existing_line)
+        # if abs((90-abs(alpha)) - (90-abs(alpha2))) < max_diff_alpha and abs(r - r2) < max_distance:
+
+        if abs((90 - abs(alpha)) - (90 - abs(alpha2))) < max_diff_alpha and (
+        not is_line_unique_by_avg_distance(line, [existing_line], max_distance)):
             return False
 
     return True
@@ -44,7 +50,7 @@ def is_line_unique_by_alpha(line, lines, max_diff_alpha=25, max_distance=20):
 
 def get_alpha_by_theta(theta):
     if theta == 0:  # line is of the form X=const
-        return float('inf')
+        return 90
     if theta == 90:  # line is of the form y=const
         return 0
     if theta > 0:
@@ -52,6 +58,18 @@ def get_alpha_by_theta(theta):
     else:
         alpha = theta + 90
     return alpha
+
+
+def get_alpha_of_line(line):
+    x1 = line[0][0]
+    y1 = line[0][1]
+    x2 = line[-1][0]
+    y2 = line[-1][1]
+    m = (y2 - y1) / (x2 - x1)
+    coefs = [m, y1 - m * x1]  # returns [c1, c0] for y=c1*x + c0
+    # coefs = np.polyfit([x1, x2], [y1, y2], 1)
+    r = int(np.abs(coefs[1]) / np.sqrt((coefs[0] * coefs[0]) + 1))
+    alpha = int(np.arctan(coefs[0]) * 180 / np.pi)
 
 
 def line_to_linear_equation_function_x_to_fx(line):
@@ -102,8 +120,11 @@ def is_line_unique_by_distance_for_each_x(line, lines, max_distance=6):
 def is_line_unique_by_avg_distance(line, lines, max_distance=6):
     x_start = min(line[0][0], line[-1][0])
     x_end = max(line[0][0], line[-1][0])
+    y_start = min(line[0][1], line[-1][1])
+    y_end = max(line[0][1], line[-1][1])
+
     inverse = False
-    if x_start == x_end:
+    if (y_start == 0 or y_start == 1) and y_end == 471:
         first_line_func = line_to_inverse_linear_equation_function_y_to_x(line)
         inverse = True
     else:
@@ -125,7 +146,7 @@ def is_line_unique_by_avg_distance(line, lines, max_distance=6):
             y_start = min(line[0][1], line[-1][1])
             y_end = max(line[0][1], line[-1][1])
             for y in range(y_start, y_end):
-                sum_of_distances += abs(x_start - second_line_func(y))
+                sum_of_distances += abs(first_line_func(y) - second_line_func(y))
             average_distance = sum_of_distances / (y_end - y_start)
         else:
             for x in range(x_start, x_end + 1):
@@ -173,8 +194,9 @@ def is_line_unique_by_avg_distance_using_integral(line, lines, max_distance=6):
     return True
 
 
-ALL_METHODS = [is_line_unique_by_avg_distance_using_integral, is_line_unique_by_avg_distance, is_line_unique_by_alpha,
-               is_line_unique]
+# ALL_METHODS = [is_line_unique_by_avg_distance_using_integral, is_line_unique_by_avg_distance, is_line_unique_by_alpha,
+#  is_line_unique]
+ALL_METHODS = [is_line_unique_by_alpha]
 
 METHOD_TO_NAME = {
     is_line_unique_by_avg_distance_using_integral: "uniqueness by avg distance using integral",
